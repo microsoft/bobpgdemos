@@ -1,0 +1,48 @@
+<aside id="pipeline-pane" class="pipeline-pane" aria-labelledby="pipeline-heading" data-pipeline>
+    <header class="pipeline-header">
+        <div>
+            <p class="eyebrow">Behind the search · live from HorizonDB</p>
+            <h2 id="pipeline-heading">AI pipeline in action</h2>
+        </div>
+        <span class="run-pill" data-run-pill>Connecting…</span>
+    </header>
+
+    <section class="code-pane" aria-labelledby="code-heading">
+        <div class="pane-heading">
+            <h3 id="code-heading">Code</h3>
+            <span class="code-tabs"><span class="code-label">ai.create_pipeline</span></span>
+        </div>
+        <pre id="code-pipeline" class="code" aria-labelledby="code-heading" tabindex="0" data-code><code>{% for line in code_lines %}<span class="code-line"{% if line.stage %} data-code-stage="{{ line.stage }}"{% endif %}><span class="ln" aria-hidden="true">{{ line.number }}</span><span>{{ line.text }}</span></span>{% endfor %}</code></pre>
+    </section>
+
+    <section class="flow-pane" aria-labelledby="flow-heading">
+        <div class="pane-heading">
+            <h3 id="flow-heading">Pipeline run</h3>
+            <span class="caption" data-caption aria-live="polite"></span>
+        </div>
+        <ol class="flow" aria-label="Pipeline stages">
+            {% for stage in stages %}
+            <li class="stage" data-stage="{{ stage.key }}">
+                <span class="dot" aria-hidden="true"></span>
+                <strong>{{ stage.title }}</strong>
+                <small>{{ stage.detail }}</small>
+                <em data-stage-time></em>
+            </li>
+            {% endfor %}
+        </ol>
+        <dl class="facts">
+            <div><dt>Run</dt><dd data-fact="run">—</dd></div>
+            <div><dt>Duration</dt><dd data-fact="duration">—</dd></div>
+            <div><dt>pg_durable instance</dt><dd data-fact="instance">—</dd></div>
+            <div><dt>Durable checkpoints</dt><dd data-fact="checkpoints">—</dd></div>
+        </dl>
+        <div class="meters pane-extra">
+            <div class="meter"><span>Rows</span><strong data-fact="rows">—</strong></div>
+            <div class="meter"><span>Searchable articles</span><strong data-fact="articles">—</strong></div>
+            <div class="meter"><span>Embedded chunks</span><strong data-fact="chunks">—</strong></div>
+            <div class="meter"><span>Sink vectors</span><strong data-fact="sink">—</strong></div>
+        </div>
+        <p class="durability-note pane-extra">Each step is a pg_durable checkpoint stored in HorizonDB. Searches never wait for the pipeline: until a refresh finishes they use the previous version, and after a restart or failover the new primary resumes the run from its last completed step.</p>
+        <div class="history pane-extra" aria-label="Recent pipeline runs" data-history></div>
+    </section>
+</aside>

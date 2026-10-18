@@ -1,0 +1,21 @@
+name: bobpg-campsites-pg18
+services:
+  db:
+    image: postgis/postgis:18-3.6@sha256:ea49d706470cfe1215c4f1e074fcab66d5af52f80adaf90d5a9beace71cd5ce8
+    environment:
+      POSTGRES_DB: campsites
+      POSTGRES_USER: campsite_admin
+      POSTGRES_PASSWORD: ${CAMPSITE_DB_PASSWORD:?Run scripts\local.ps1 -Action Start first}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - data:/var/lib/postgresql
+      - ./sql/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./sql/02-seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U campsite_admin -d campsites"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+volumes:
+  data:

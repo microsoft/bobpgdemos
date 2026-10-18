@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Step by step · Caldova Knowledge Hub</title>
+    <link rel="icon" href="/static/horizondb.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="compact-pane" data-pane-key="kh-pipeline-walkthrough-v2" data-pane-default="open" data-replay-pace="slow">
+    {% include "topbar.html" %}
+
+    <div class="workspace">
+        <main class="app-pane walk" data-walk>
+            <header class="walk-intro">
+                <p class="eyebrow">Step by step</p>
+                <h1>Searches never wait for the AI pipeline</h1>
+            </header>
+
+            <nav class="walk-stepper" aria-label="Steps">
+                <ol>
+                    <li><button type="button" data-goto="1"><span>1</span> Search</button></li>
+                    <li><button type="button" data-goto="2"><span>2</span> Add an article</button></li>
+                    <li><button type="button" data-goto="3"><span>3</span> Auto-search</button></li>
+                    <li><button type="button" data-goto="4"><span>4</span> Search again</button></li>
+                    <li><button type="button" data-goto="5"><span>5</span> Failover</button></li>
+                </ol>
+            </nav>
+
+            {% for message in messages %}
+            <p class="notice notice-error" role="alert">{{ message }}</p>
+            {% endfor %}
+            <p class="notice notice-error" data-walk-error role="alert" hidden></p>
+
+            <div class="walk-stage">
+                <section class="walk-card" data-step="1" aria-labelledby="step-1-title">
+                    <h2 id="step-1-title" tabindex="-1">Search</h2>
+                    <p class="walk-what">Search for <strong>“frozen CO2 on passenger flights”</strong>.</p>
+                    <button class="primary" type="button" data-action="search-before">Search</button>
+                    <div class="walk-output" data-output hidden></div>
+                    <p class="walk-callout" data-callout hidden></p>
+                </section>
+
+                <section class="walk-card" data-step="2" aria-labelledby="step-2-title" hidden>
+                    <h2 id="step-2-title" tabindex="-1">Add an article</h2>
+                    <p class="walk-what">The app only saves a row. The AI pipeline on the right does the rest.</p>
+                    <blockquote class="walk-article" data-article></blockquote>
+                    <button class="primary" type="button" data-action="change">Add the article</button>
+                    <div class="walk-output" data-output hidden></div>
+                    <p class="walk-callout" data-callout hidden></p>
+                </section>
+
+                <section class="walk-card" data-step="3" aria-labelledby="step-3-title" hidden>
+                    <h2 id="step-3-title" tabindex="-1">Searched for you, automatically <span class="walk-auto">Automatic · no click needed</span></h2>
+                    <p class="walk-what">The pipeline takes about two seconds, faster than anyone can click, so the app ran the same search the moment you saved, while the pipeline on the right was still working.</p>
+                    <div class="walk-output" data-output hidden></div>
+                    <p class="walk-callout" data-callout hidden></p>
+                </section>
+
+                <section class="walk-card" data-step="4" aria-labelledby="step-4-title" hidden>
+                    <h2 id="step-4-title" tabindex="-1">Search again</h2>
+                    <p class="walk-what">Run the same search for <strong>“frozen CO2 on passenger flights”</strong> again.</p>
+                    <button class="primary" type="button" data-action="search-after">Search again</button>
+                    <div class="walk-output" data-output hidden></div>
+                    <p class="walk-callout" data-callout hidden></p>
+                    <div class="walk-timeline" data-timeline hidden>
+                        <h3>What happened, in order</h3>
+                        <ol data-timeline-list></ol>
+                    </div>
+                </section>
+
+                <section class="walk-card" data-step="5" aria-labelledby="step-5-title" hidden>
+                    <h2 id="step-5-title" tabindex="-1">Survive a failover mid-run</h2>
+                    <p class="walk-what">Update a 16-part handbook (one 30-second pipeline run). In the middle of Embed, the app fails over the primary for real.</p>
+                    <button class="primary walk-failover" type="button" data-action="failover" hidden>⚡ Update the handbook and fail over</button>
+                    <ol class="walk-monitor" aria-live="polite">
+                        <li data-monitor="pipeline"><strong>AI pipeline run</strong><span data-monitor-value>Waiting for the update…</span></li>
+                        <li data-monitor="primary"><strong>Primary server</strong><span data-monitor-value>Checking…</span></li>
+                        <li data-monitor="search"><strong>Searches</strong><span data-monitor-value>Starting…</span></li>
+                    </ol>
+                    <p class="walk-how" data-failover-how hidden>Failover from the app is not set up. Deploy with <strong>02-deploy-appservice.ps1 -EnableFailover</strong>.</p>
+                    <p class="walk-how" data-failover-status hidden></p>
+                    <div class="walk-output" data-output hidden></div>
+                    <p class="walk-callout" data-callout hidden></p>
+                </section>
+            </div>
+
+            <div class="walk-nav">
+                <button class="secondary" type="button" data-back>← Back</button>
+                <button class="secondary" type="button" data-reset>Start over</button>
+                <button class="primary" type="button" data-next>Next →</button>
+            </div>
+        </main>
+
+        {% include "pipeline.html" %}
+    </div>
+
+    <script id="initial-status" type="application/json">{{ initial_status|tojson }}</script>
+    <script src="/static/app.js" defer></script>
+    <script src="/static/walkthrough.js" defer></script>
+</body>
+</html>

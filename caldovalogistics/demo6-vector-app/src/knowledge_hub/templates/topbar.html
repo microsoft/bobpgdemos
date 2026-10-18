@@ -1,0 +1,14 @@
+<header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">C</span><strong>Caldova Knowledge Hub</strong></div>
+    <div class="topbar-actions">
+        <span class="platform">AI pipeline · pg_durable</span>
+        {% if page != 'walkthrough' %}
+        <a class="step-link" href="/">1 · 2 · 3 Step by step</a>
+        {% endif %}
+        <button class="debug-toggle" type="button" data-debug-toggle aria-controls="pipeline-pane" aria-expanded="true">Hide pipeline</button>
+        <span class="horizondb-badge">
+            <img src="/static/horizondb.svg" alt="" width="34" height="34">
+            <span><small>Powered by</small><strong>Azure HorizonDB</strong></span>
+        </span>
+    </div>
+</header>
