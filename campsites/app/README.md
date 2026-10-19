@@ -17,6 +17,14 @@ integration; live overlapping-booking rejection and checkout-day arrival; browse
 search, typo lookup, booking dialog, and narrow-screen layout. The live booking
 smoke test removed only its own uniquely identified test bookings.
 
+## Architecture slide
+
+The static [4K architecture diagram](./campsites-architecture.png) and
+[1920 x 1080 version](./campsites-architecture-1080p.png) fit a 16:9 PowerPoint
+slide. They show the completed local PostgreSQL dump/restore migration,
+Azure PostgreSQL, App Service, browser and map connections, and the PostgreSQL
+features used by the app. The diagram is separate from the walkthrough GIF.
+
 ## Map and live SQL walkthrough
 
 This 47-second walkthrough uses 12 numbered captions to explain the live map,
@@ -28,6 +36,12 @@ lookup: `Lake Samamish Heron` matches `Lake Sammamish Heron`, alongside the
 `pg_trgm` SQL and similarity score.
 
 ![Campsite map and live SQL Debug walkthrough](./campsites-debug-walkthrough.gif)
+
+For a full-slide PowerPoint presentation, use the separate
+[1920 x 1080 widescreen GIF](./campsites-debug-walkthrough-widescreen.gif).
+It is recorded at 16:9, including the numbered caption bar, and keeps the
+booking example and a 10-second final misspelled-search scene. Insert it as a
+picture on a widescreen slide and size it to the slide without stretching.
 
 The map is part of the normal campsite view. Leaflet is served locally from the
 installed package; OpenStreetMap supplies attributed street-map tiles. No map
