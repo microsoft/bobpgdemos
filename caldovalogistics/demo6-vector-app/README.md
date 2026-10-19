@@ -1,5 +1,9 @@
 # Demo 6: Caldova Knowledge Hub — Vector Search Kept Fresh by an AI Pipeline
 
+![Knowledge Hub on Azure App Service: keyword vs vector vs hybrid search, an added article embedded by the on_change AI pipeline in seconds, and a real HorizonDB failover mid-run that pg_durable survives](knowledge-hub-demo.gif)
+
+*Recorded live against HorizonDB (failover section at 4× speed).*
+
 A FastAPI app on Azure App Service. Operators search logistics procedures,
 carrier notes, and facility runbooks **by meaning**. When they add, edit, or
 delete an article, HorizonDB keeps the vectors current without any app code:
@@ -245,6 +249,23 @@ HorizonDB model registry. Note that `azure_ai` grants `PUBLIC` read access to
 database password is an App Service setting; for production, use a Key Vault
 reference. The deployed app is public by default; for shared use, add App
 Service authentication (Microsoft Entra ID), which needs an app registration.
+
+## Re-record the GIF
+
+`scripts/record-gif/` drives the deployed app with headless Chromium
+(Playwright) and builds `knowledge-hub-demo.gif` with Pillow:
+
+```powershell
+cd demo6-vector-app/scripts/record-gif
+npm install; npx playwright install chromium
+node record.cjs            # add --skip-b to leave out the failover
+python make-gif.py ../../knowledge-hub-demo.gif
+```
+
+Part B runs walkthrough step 5, which forces a **real failover** (one every
+5 minutes) and leaves the walkthrough's demo article behind; delete it
+afterwards (or select **Start over** in the walkthrough). Set
+`KNOWLEDGE_HUB_URL` to record a different deployment.
 
 ## Tests
 

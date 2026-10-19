@@ -1,0 +1,11 @@
+{
+  "name": "knowledge-hub-record-gif",
+  "private": true,
+  "description": "Records the Demo 6 GIF from the deployed app",
+  "scripts": {
+    "record": "node record.cjs"
+  },
+  "dependencies": {
+    "playwright": "1.57.0"
+  }
+}
