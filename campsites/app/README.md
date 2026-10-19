@@ -19,8 +19,11 @@ smoke test removed only its own uniquely identified test bookings.
 
 ## Map and live SQL walkthrough
 
-This 30-second walkthrough shows the live map, search filters, availability,
-typo lookup, and Debug sidebar. It uses read-only actions and creates no bookings.
+This 42-second walkthrough uses 12 numbered captions to explain the live map,
+search filters, a new fictional booking and its SQL INSERT, the resulting
+availability change, misspelled-name lookup, and Debug history. The single demo
+reservation created for the recording was removed afterward; existing bookings
+were preserved.
 
 ![Campsite map and live SQL Debug walkthrough](./campsites-debug-walkthrough.gif)
 
