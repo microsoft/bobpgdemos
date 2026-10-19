@@ -42,7 +42,7 @@
             <div class="meter"><span>Embedded chunks</span><strong data-fact="chunks">—</strong></div>
             <div class="meter"><span>Sink vectors</span><strong data-fact="sink">—</strong></div>
         </div>
-        <p class="durability-note pane-extra">Each step is a pg_durable checkpoint stored in HorizonDB. Searches never wait for the pipeline: until a refresh finishes they use the previous version, and after a restart or failover the new primary resumes the run from its last completed step.</p>
+        <p class="durability-note pane-extra">Each step is a pg_durable checkpoint stored in HorizonDB. Searches are not blocked by the AI pipeline: until a refresh finishes they use the previous version, and after a restart or failover the new primary resumes the run from its last completed step.</p>
         <div class="history pane-extra" aria-label="Recent pipeline runs" data-history></div>
     </section>
 </aside>

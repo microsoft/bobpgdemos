@@ -186,7 +186,7 @@ This uses the full app at **`/app`** (type it in the address bar; its
 | `knowledge_hub.refresh_chunk_map()` | Runs on every article save (row trigger): recomputes the expected chunks, keeps the last complete version as *previous*, and deletes vectors that no version of any article uses any more. |
 | `knowledge_hub.pipeline_status()` | One JSON snapshot for the right pane: definition, runs, latest run's `df.nodes`, freshness. |
 
-### Searches never wait for the pipeline
+### Searches are not blocked by the AI pipeline
 
 - Saving only commits the row; the `on_change` trigger submits a pg_durable
   job and returns (an insert took 0.18 s), and embedding runs in the background.
