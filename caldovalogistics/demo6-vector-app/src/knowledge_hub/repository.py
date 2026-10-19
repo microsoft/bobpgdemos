@@ -255,8 +255,12 @@ class KnowledgeHubRepository:
         return bool(row["running"])
 
     def embedding_pending(self) -> bool:
-        """True while any current article chunk still waits for its vector."""
-        with self._database.reader() as connection:
+        """True while any current article chunk still waits for its vector.
+
+        Read on the primary: a just-saved article can take a moment to reach
+        the read replica, which would otherwise report nothing pending.
+        """
+        with self._database.primary() as connection:
             row = connection.execute(
                 """
                 SELECT EXISTS (

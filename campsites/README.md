@@ -14,6 +14,19 @@ It runs on Azure App Service Premium P1v3 with always-on, health checks, and a
 managed identity to access the migrated database. Bookings are fictional but
 persist in the shared demo database; use aliases, not personal information.
 
+## Architecture
+
+The dark-mode, 16:9 diagram shows the one-time container-to-Azure migration,
+the deployed browser/API/database flow, and the PostgreSQL features used by
+the app. Production and staging share the migrated database; the local
+container is not a live replication source.
+
+![Campsite migration and application architecture](./campsites-architecture.svg)
+
+Download the [slide-ready PNG](./app/campsites-architecture.png) or edit the
+[SVG source](./campsites-architecture.svg). The engine version shown is the
+verified migration checkpoint, not a live version check.
+
 ## Prerequisites
 
 - Docker Desktop with the Linux engine running, Docker Compose, and PowerShell.

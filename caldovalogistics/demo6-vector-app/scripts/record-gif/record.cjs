@@ -2,6 +2,9 @@
 // steps on "/") from the deployed app into PNG frames plus frames.json
 // (file + display duration). make-gif.py turns them into a GIF.
 // Step 5 forces a REAL HorizonDB failover; pass --skip-failover to stop after step 4.
+// --size=WIDTHxHEIGHT sets the frame size (default 1280x800). Wide sizes keep a
+// 1440 px CSS layout and render at a higher device scale, e.g. --size=1920x1080
+// for a full 16:9 slide.
 const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
@@ -9,6 +12,12 @@ const { chromium } = require('playwright');
 const BASE = process.env.KNOWLEDGE_HUB_URL || 'https://caldova-knowledge-hub-d1229495.azurewebsites.net';
 const OUT = path.join(__dirname, 'frames');
 const SKIP_FAILOVER = process.argv.includes('--skip-failover');
+const SIZE = (process.argv.find((arg) => arg.startsWith('--size=')) || '--size=1280x800').slice(7);
+const [FRAME_WIDTH, FRAME_HEIGHT] = SIZE.split('x').map(Number);
+if (!FRAME_WIDTH || !FRAME_HEIGHT) throw new Error(`Invalid --size '${SIZE}'; use WIDTHxHEIGHT.`);
+const CSS_WIDTH = Math.min(FRAME_WIDTH, 1440);
+const SCALE = FRAME_WIDTH / CSS_WIDTH;
+const CSS_HEIGHT = Math.round(FRAME_HEIGHT / SCALE);
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
@@ -20,7 +29,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const log = (...args) => console.log(new Date().toISOString().slice(11, 19), ...args);
 
 async function applyCaption() {
-    await page.evaluate((text) => {
+    await page.evaluate(({ text, maxWidth }) => {
         let box = document.getElementById('gif-caption');
         if (!text) { box?.remove(); return; }
         if (!box) {
@@ -28,7 +37,7 @@ async function applyCaption() {
             box.id = 'gif-caption';
             Object.assign(box.style, {
                 position: 'fixed', left: '50%', bottom: '18px', transform: 'translateX(-50%)',
-                maxWidth: '1180px', width: 'max-content', boxSizing: 'border-box',
+                maxWidth: `${maxWidth}px`, width: 'max-content', boxSizing: 'border-box',
                 padding: '12px 20px', borderRadius: '10px', borderLeft: '6px solid #2ec4e6',
                 background: 'rgba(8, 22, 48, 0.94)', color: '#ffffff', zIndex: '2147483647',
                 font: '600 19px/1.35 "Segoe UI", system-ui, sans-serif', pointerEvents: 'none',
@@ -37,7 +46,7 @@ async function applyCaption() {
             document.body.appendChild(box);
         }
         box.textContent = text;
-    }, captionText).catch(() => {});
+    }, { text: captionText, maxWidth: CSS_WIDTH - 100 }).catch(() => {});
 }
 
 async function caption(text) {
@@ -160,10 +169,13 @@ async function walkthrough() {
         await sleep(Math.max(0, 1000 - (Date.now() - started)));
     }
     await sleep(1500);
+    const outcome = await page.evaluate(() => document.querySelector('[data-step="5"] [data-callout]')?.textContent || '(none)');
+    log('step 5 callout:', outcome);
+    // The failover must land while the run is still in Embed; otherwise the take does not show the story.
+    if (!/Failover survived/i.test(outcome)) throw new Error('Step 5 did not show a survived mid-run failover; wait for the cooldown and record again.');
     await reveal('[data-step="5"] [data-callout]');
     await caption('5 · Failover survived: same run finished on the new primary, and the updated rule is searchable');
     await capture(6000);
-    log('step 5 callout:', await page.evaluate(() => document.querySelector('[data-step="5"] [data-callout]')?.textContent || '(none)'));
 }
 
 async function removeDemoArticle() {
@@ -184,7 +196,8 @@ async function removeDemoArticle() {
 
 (async () => {
     const browser = await chromium.launch();
-    page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    page = await browser.newPage({ viewport: { width: CSS_WIDTH, height: CSS_HEIGHT }, deviceScaleFactor: SCALE });
+    log(`frames ${FRAME_WIDTH}x${FRAME_HEIGHT} (layout ${CSS_WIDTH}x${CSS_HEIGHT} at ${SCALE.toFixed(2)}x)`);
     try {
         await walkthrough();
     } finally {

@@ -261,11 +261,15 @@ cd demo6-vector-app/scripts/record-gif
 npm install; npx playwright install chromium
 node record.cjs            # add --skip-failover to stop after step 4
 python make-gif.py ../../knowledge-hub-demo.gif
+# Full 16:9 slide version (1920x1080):
+node record.cjs --size=1920x1080
+python make-gif.py ../../knowledge-hub-demo-1080p.gif
 ```
 
-Step 5 forces a **real failover** (one every 5 minutes). The script deletes
-the walkthrough's demo article when it finishes. Set `KNOWLEDGE_HUB_URL` to
-record a different deployment.
+Step 5 forces a **real failover** (one every 5 minutes), and the script stops
+with an error if the failover did not land mid-run, so a bad take never
+replaces the GIF. The script deletes the walkthrough's demo article when it
+finishes. Set `KNOWLEDGE_HUB_URL` to record a different deployment.
 
 ## Tests
 

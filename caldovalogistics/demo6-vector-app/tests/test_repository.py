@@ -24,6 +24,8 @@ class FakeConnection:
             self._rows = [{"server": "10.0.0.5", "started_at": datetime(2026, 10, 18, 11, 59, tzinfo=UTC)}]
         elif "pipeline_status" in sql:
             self._rows = [{"status": self.status}]
+        elif "AS pending" in sql:
+            self._rows = [{"pending": True}]
         else:
             self._rows = []
         return self
@@ -111,3 +113,13 @@ def test_query_is_embedded_on_the_primary_and_searched_on_the_reader() -> None:
 
     assert [pool for pool, sql in database.pools if "embed_query" in sql] == ["primary"]
     assert [pool for pool, sql in database.pools if "embed_query" not in sql] == ["reader"]
+
+
+def test_embedding_pending_is_read_on_the_primary() -> None:
+    # Right after a save the read replica may not have the new article's
+    # chunk rows yet, so it would report nothing pending while the pipeline runs.
+    database = FakeDatabase()
+    repository = KnowledgeHubRepository(database)  # type: ignore[arg-type]
+
+    assert repository.embedding_pending() is True
+    assert [pool for pool, _ in database.pools] == ["primary"]
