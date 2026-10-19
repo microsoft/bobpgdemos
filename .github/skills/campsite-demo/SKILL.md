@@ -1,6 +1,6 @@
 ---
 name: campsite-demo
-description: 'Run this repository''s specific campsite PostgreSQL portability demo. Use when asked to run the campsite demo, campsite preflight, pre-flight, refresh the campsite demo client IP, prepare the campsite migration demo, or demonstrate local PostgreSQL to Azure Flexible Server. Checks exact engine and extension versions, uses Entra and verified TLS, and gates firewall changes and migrations separately.'
+description: 'Run or explain this repository''s specific campsite PostgreSQL portability demo. Use when asked to run the campsite demo, run the local campsite or campsites demo, explain the local demo, find your next escape, run campsite preflight or pre-flight, refresh the campsite demo client IP, prepare the campsite migration demo, or demonstrate local PostgreSQL to Azure Flexible Server. Local mode demonstrates PostGIS, full-text search, JSONB, typo tolerance, and availability without Azure access. Cloud mode checks exact versions, uses Entra and verified TLS, and gates firewall changes and migrations separately.'
 argument-hint: 'preflight | local | migrate | verify'
 ---
 
@@ -28,6 +28,17 @@ data, or change authentication/allowlists without explicit approval. A plain
 "run the demo" means preflight, local search demonstration, and a migration
 approval gate, not permission to overwrite cloud data.
 
+## Prompt examples and mode selection
+
+- "Run the local campsite demo" or `/campsite-demo local`: go directly to
+  section 2. Do not run Azure preflight, access Azure, or migrate data.
+- "What is the local campsite demo?": explain the section 2 walkthrough
+  without executing commands.
+- "Run the campsite demo preflight" or `/campsite-demo preflight`: run
+  section 1 only.
+- "Run the campsite migration demo" or `/campsite-demo migrate`: run
+  preflight, then follow section 3 with separate migration approval.
+
 ## 1. Preflight (also called pre-flight)
 
 Run:
@@ -40,7 +51,12 @@ This is read-only by default and uses PostgreSQL clients inside the existing
 container. It checks Azure login/server state, local seeded data, current public
 IPv4, one named firewall rule, an Entra SQL login with certificate-verified TLS,
 exact major/minor engine equality, and availability/allowlisting of the local
-extension versions. It returns `Ready` only when these checks pass.
+extension versions. Inventory every installed non-core extension included by
+`pg_dump`, not only the three used by the search demo. The local image also
+installs `fuzzystrmatch`, `postgis_tiger_geocoder`, and `postgis_topology`; these
+require matching Azure versions and allowlisting for a full database restore.
+Ask explicit approval before adding any missing allowlist entries, preserving
+all existing entries. It returns `Ready` only when these checks pass.
 
 If the local container is stopped or not initialized, ask approval to run:
 
@@ -84,17 +100,52 @@ preflight passed when only connectivity or control-plane checks succeeded.
 
 ## 2. Demonstrate locally
 
-For "local" mode, run only these commands, without Azure/firewall changes:
+The local demo is PostgreSQL in Docker at `localhost:55432`, not a website or
+application. It uses 30 fictional campsites near real Washington locations and
+three seeded reservations.
+
+For "local" mode, run only these commands in order, without Azure access or
+firewall changes. Stop and report the error if verification fails; do not
+continue to the search demo or silently reseed data. If the database is not
+configured or the container is stopped, ask approval to run `-Action Start`
+as described in section 1, then retry.
 
 ```powershell
 .\campsites\scripts\local.ps1 -Action Verify
 .\campsites\scripts\local.ps1 -Action Demo
 ```
 
-For the full demo, execute them after preflight. Explain briefly: 30 fictional
-campsites; PostGIS + full-text + JSONB yields exactly six results, pg_trgm handles
-the misspelling, and an exclusion constraint protects bookings. Do not claim
-performance gains from this tiny dataset.
+`Verify` runs local behavior checks with rolled-back row changes; identity
+sequences can still advance because PostgreSQL sequences are not transactional.
+`Demo` runs the three read-only queries in
+[03-demo.sql](../../../campsites/sql/03-demo.sql). For the full demo, execute
+these commands after preflight.
+
+Narrate the query results briefly:
+
+1. **Find your next escape:** "Find a pet-friendly lakeside campsite for four,
+   with kayaking, within 45 km of Seattle." PostGIS filters geographic distance,
+   full-text search matches `lake kayaking`, JSONB filters pet-friendly and
+   kayak-rental amenities, and capacity must be at least four. Expect exactly
+   six matches ordered by distance, then name.
+2. **Handle a typo:** search for `Lake Samamish Heron`. The `pg_trgm` similarity
+   search finds the intended `Lake Sammamish Heron` despite the misspelling,
+   returning up to three candidates with similarity scores.
+3. **Check availability:** show up to five campsites without overlapping
+   reservations for July 11-13, 2030. Explain that `[arrival, departure)` ranges
+   permit checkout-day arrivals.
+
+Report actual results and verification pass/fail; if the first query does not
+return six matches, report the discrepancy instead of claiming success.
+Distinguish the availability query from booking protection: verification checks
+the exclusion constraint, but `Demo` does not run the two-session booking race.
+Use the runbook's separate two-session procedure only when requested, with
+explicit permission for the bookings and cleanup.
+
+Close with the portability story: these same PostgreSQL features and queries
+can move to Azure Database for PostgreSQL without rewriting them. Local mode
+does not prove a migration occurred; report Azure checks and migration as
+not run. Do not claim performance gains from this tiny dataset.
 
 ## 3. Migrate only after approval
 
@@ -116,7 +167,11 @@ stage fails, stop and report it; leave the source intact.
 ## 4. Verify and present
 
 For "verify" mode, run read-only preflight first. Ask permission before executing
-the rolled-back cloud checks in `04-verify.sql`; they perform temporary writes.
+the rolled-back cloud checks in `04-verify.sql`; they perform temporary row writes
+and can advance identity sequences despite rollback. Compare sequence state
+immediately after restore, then confirm that verification leaves row
+fingerprints unchanged and sequences safe for future inserts. Do not reset
+sequences merely to hide expected verification advances.
 Compare source/target fingerprints, counts, identities, engine and extension
 versions, and run the same search SQL on Azure. Use the runbook's two-session
 booking procedure with explicit permission for those bookings and cleanup.

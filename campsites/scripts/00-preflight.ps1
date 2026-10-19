@@ -69,11 +69,12 @@ SELECT json_build_object(
     'campsites', (SELECT count(*) FROM escape.campsite),
     'reservations', (SELECT count(*) FROM escape.reservation),
     'extensions', (SELECT json_agg(json_build_object('name', extname, 'version', extversion) ORDER BY extname)
-        FROM pg_extension WHERE extname IN ('postgis', 'pg_trgm', 'btree_gist'))
+        FROM pg_extension WHERE extname <> 'plpgsql')
 );
 '@
 $local = Invoke-DatabaseJson -Query $localQuery -ConnectionArguments @('-U', 'campsite_admin', '-d', 'campsites')
-if ($local.version -ne '180006' -or $local.campsites -ne 30 -or @($local.extensions).Count -ne 3) {
+$missingRequired = @('postgis', 'pg_trgm', 'btree_gist') | Where-Object { $local.extensions.name -notcontains $_ }
+if ($local.version -ne '180006' -or $local.campsites -ne 30 -or @($missingRequired).Count -gt 0) {
     throw 'Local demo must have PostgreSQL 18.6, exactly 30 campsites, and all three required extensions.'
 }
 
@@ -137,7 +138,7 @@ SELECT json_build_object(
     'tls', (SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid()),
     'application_tables', (SELECT count(*) FROM pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema')),
     'extensions', (SELECT json_agg(json_build_object('name', name, 'version', version, 'installed', installed) ORDER BY name, version)
-        FROM pg_available_extension_versions WHERE name IN ('postgis', 'pg_trgm', 'btree_gist')),
+        FROM pg_available_extension_versions WHERE name <> 'plpgsql'),
     'allowlist', current_setting('azure.extensions')
 );
 '@

@@ -77,8 +77,9 @@ Run this at the start of each demo session, on this laptop or a Dev Box:
 
 Preflight is **read-only by default**. It checks the running local database,
 Azure server and Entra authentication configuration, current outbound IPv4,
-firewall rule, verified-TLS SQL access, exact engine version, and extension
-version availability/allowlisting. It uses the existing container's PostgreSQL
+firewall rule, verified-TLS SQL access, exact engine version, and version
+availability/allowlisting for every installed non-core source extension, not
+just the three used by the search demo. It uses the existing container's PostgreSQL
 clients, so no separate host client installation is required. Tokens stay in
 process memory and the previous `PGPASSWORD` is restored on success or error.
 
@@ -126,28 +127,49 @@ powershell.exe -NoProfile -Command '& {
 Tests mock Azure CLI, Docker, and IP detection: they do not modify Azure or
 require an active database connection. They cover read-only and refresh paths,
 same-IP no-ops, `-WhatIf`, legacy-rule retirement, invalid IPs, engine/extension
-differences, TLS enforcement, and credential restoration on errors.
+differences (including additional extensions included in a full dump), TLS
+enforcement, and credential restoration on errors.
 
 Target: `bobward-campsites-pg18.postgres.database.azure.com`, database
 `campsites`, Entra administrator `bobward@microsoft.com`, resource group
 `campsites-demo-rg`, subscription `0efc44aa-c965-420f-aac4-fff305dbcc97`.
 No application or cloud data migration is included in target provisioning.
 
-Provisioning checkpoint (2026-10-18): the server is `Ready`, Entra-only auth and
-the single-client-IP firewall rule are configured, the empty `campsites` database
-exists, and the three extensions are allowlisted. Preflight detected a changed
-client IP; the approved refresh created `campsites-demo-client` and retired the
-original provisioning rule. Read-only rechecks still fail during connection
-setup. A credential-free PostgreSQL SSLRequest is forcibly closed before TLS
-negotiation, so the remaining problem is not established as an Entra login
-failure. SQL-level target version and extension verification remain blocked
-until connectivity succeeds.
-No source data has been restored to Azure.
+Migration checkpoint (2026-10-18): the approved `pg_dump`/`pg_restore` migration
+completed over certificate-verified TLS with Entra authentication. Local and
+Azure engines both reported PostgreSQL **18.6**. Azure now contains the migrated
+database; it is **not empty** and must not be overwritten for a repeat demo.
+The local source remains available and unchanged by dump/restore.
 
-The pinned local image has PostGIS **3.6.4**, pg_trgm **1.6**, and btree_gist
-**1.8**. Azure's current PostgreSQL 18 documentation lists PostGIS **3.6.1**:
-inspect the actual target and resolve this extension-version difference before
-dump/restore. Matching PostgreSQL engine versions alone is not sufficient.
+The first restore failed because the local PostGIS image includes additional
+extensions beyond those used in the search demo. Its single transaction rolled
+back completely, and the target was verified empty before retrying. With explicit
+approval, the existing allowlist was extended to include `fuzzystrmatch`,
+`postgis_tiger_geocoder`, and `postgis_topology`. Preflight now checks all
+installed non-core extensions so this condition blocks migration earlier.
+
+All six source/target extension versions matched: PostGIS, PostGIS topology,
+and PostGIS TIGER geocoder **3.6.4**; fuzzystrmatch **1.2**; pg_trgm **1.6**;
+and btree_gist **1.8**. Actual Azure SQL results, not documented defaults, were
+used to verify compatibility.
+
+Successful run timings: dump/archive copy **3.286 seconds**, restore **9.824
+seconds**, and dump through restore including intervening checks **20.416
+seconds**. These are measured rehearsal results, not a guaranteed duration.
+The ignored `.local\` folder retains the archives and timestamped migration
+records.
+
+Verification passed for 30 campsites, three reservations, deterministic data
+fingerprints, extension versions, indexes, constraints, generated/identity
+columns, and sequence definitions/state immediately after restore. The same
+Azure queries returned six combined-search matches and the expected typo match.
+Rolled-back booking checks passed; they advance the reservation identity
+sequence even though row changes roll back. Final data fingerprints still
+matched, and sequences remained safe for future inserts. The two-session
+booking race was not run. No application was deployed, and no VPN was configured.
+
+The managed single-client-IP rule is current. The separately configured Dev Box
+and user-intended Allow Azure services rules were preserved.
 
 ## What PostgreSQL demonstrates
 
@@ -163,7 +185,9 @@ functionality/portability demo, **not** a performance benchmark.
 
 Dates in the seed and examples are fixed in July/August 2030 for repeatability.
 Reservations use `[arrival, departure)` so checkout-day arrivals are valid.
-`04-verify.sql` rolls back all its test changes, including temporary deletes.
+`04-verify.sql` rolls back its test row changes, including temporary deletes.
+PostgreSQL identity sequences are not transactional: test inserts can advance
+the reservation sequence despite rollback.
 
 ## Two-session booking demonstration
 
@@ -205,6 +229,19 @@ For this specific demo, use
 Or invoke `/campsite-demo preflight` in a skill-enabled VS Code chat. The skill
 knows this demo's target, runs the checks, requests approval for an IP refresh
 when necessary, and separately gates migration and cloud test writes.
+
+For just the local walkthrough, prompt:
+
+> Run the local campsite demo.
+
+Or invoke `/campsite-demo local`. This verifies the local database, then runs
+and explains the six-match campsite search, typo-tolerant name search, and
+availability query. It does not access Azure, change firewall rules, or migrate
+data. If the container needs starting, the skill asks approval first.
+
+To hear the walkthrough without running commands, prompt:
+
+> What is the local campsite demo?
 
 The reusable migration skill is
 [local-postgres-to-azure](../.github/skills/local-postgres-to-azure/SKILL.md).

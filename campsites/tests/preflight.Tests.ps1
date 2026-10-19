@@ -20,6 +20,8 @@ Describe 'Campsite demo preflight' {
             Tls = $true
             Allowlist = 'postgis, pg_trgm, btree_gist'
             TargetTables = 0
+            LocalExtraExtensions = @()
+            TargetExtraExtensions = @()
         }
         $env:PGPASSWORD = 'pre-existing-test-value'
         Mock Test-Path { $true } -ParameterFilter { $Path -like '*\.local\.env' }
@@ -66,10 +68,19 @@ Describe 'Campsite demo preflight' {
                         @{ name = 'postgis'; version = $state.PostgisVersion; installed = $false }
                         @{ name = 'pg_trgm'; version = '1.6'; installed = $false }
                         @{ name = 'btree_gist'; version = '1.8'; installed = $false }
-                    )
+                    ) + @($state.TargetExtraExtensions)
                 } | ConvertTo-Json -Depth 5 -Compress
             } else {
-                '{"version":"180006","campsites":30,"reservations":3,"extensions":[{"name":"postgis","version":"3.6.4"},{"name":"pg_trgm","version":"1.6"},{"name":"btree_gist","version":"1.8"}]}'
+                @{
+                    version = '180006'
+                    campsites = 30
+                    reservations = 3
+                    extensions = @(
+                        @{ name = 'postgis'; version = '3.6.4' }
+                        @{ name = 'pg_trgm'; version = '1.6' }
+                        @{ name = 'btree_gist'; version = '1.8' }
+                    ) + @($state.LocalExtraExtensions)
+                } | ConvertTo-Json -Depth 5 -Compress
             }
         }
     }
@@ -96,6 +107,31 @@ Describe 'Campsite demo preflight' {
         { & $preflight } | Should Throw 'Firewall refresh required'
         $global:CampsitePreflightTestState.Writes.Count | Should Be 0
         $global:CampsitePreflightTestState.CloudQueries | Should Be 0
+    }
+    It 'blocks an additional dumped extension that is not allowlisted' {
+        $state = $global:CampsitePreflightTestState
+        $state.LocalExtraExtensions = @(@{ name = 'fuzzystrmatch'; version = '1.2' })
+        $state.TargetExtraExtensions = @(@{ name = 'fuzzystrmatch'; version = '1.2'; installed = $false })
+        { & $preflight } | Should Throw 'Extension not allowlisted: fuzzystrmatch'
+        $state.Writes.Count | Should Be 0
+    }
+    It 'blocks an additional dumped extension version mismatch' {
+        $state = $global:CampsitePreflightTestState
+        $state.LocalExtraExtensions = @(@{ name = 'fuzzystrmatch'; version = '1.2' })
+        $state.TargetExtraExtensions = @(@{ name = 'fuzzystrmatch'; version = '1.1'; installed = $false })
+        $state.Allowlist += ',fuzzystrmatch'
+        { & $preflight } | Should Throw 'Extension mismatch: fuzzystrmatch'
+    }
+    It 'accepts compatible additional extensions and inventories every dumped extension' {
+        $state = $global:CampsitePreflightTestState
+        $state.LocalExtraExtensions = @(@{ name = 'fuzzystrmatch'; version = '1.2' })
+        $state.TargetExtraExtensions = @(@{ name = 'fuzzystrmatch'; version = '1.2'; installed = $false })
+        $state.Allowlist += ',fuzzystrmatch'
+        $result = & $preflight
+        $result.Status | Should Be 'Ready'
+        @($result.Extensions).Count | Should Be 4
+        $state.DockerCalls[0] | Should Match "extname <> 'plpgsql'"
+        $state.DockerCalls[1] | Should Match "name <> 'plpgsql'"
     }
     It 'previews refresh without applying it or claiming readiness' {
         $global:CampsitePreflightTestState.Ip = '203.0.113.21'
