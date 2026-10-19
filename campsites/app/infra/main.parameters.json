@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "campsites-dev-a59e"
+    },
+    "location": {
+      "value": "centralus"
+    },
+    "sessionId": {
+      "value": "a59e543e-d603-4456-b8f1-7b87d0acff5d"
+    },
+    "deployedBy": {
+      "value": "Bob Ward"
+    },
+    "createdAt": {
+      "value": "2026-10-19T05:07:19.4269529-05:00"
+    }
+  }
+}
