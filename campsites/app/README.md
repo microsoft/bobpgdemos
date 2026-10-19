@@ -19,11 +19,13 @@ smoke test removed only its own uniquely identified test bookings.
 
 ## Map and live SQL walkthrough
 
-This 42-second walkthrough uses 12 numbered captions to explain the live map,
+This 47-second walkthrough uses 12 numbered captions to explain the live map,
 search filters, a new fictional booking and its SQL INSERT, the resulting
 availability change, misspelled-name lookup, and Debug history. The single demo
 reservation created for the recording was removed afterward; existing bookings
-were preserved.
+were preserved. The final scene holds for 10 seconds with an enlarged typo
+lookup: `Lake Samamish Heron` matches `Lake Sammamish Heron`, alongside the
+`pg_trgm` SQL and similarity score.
 
 ![Campsite map and live SQL Debug walkthrough](./campsites-debug-walkthrough.gif)
 
