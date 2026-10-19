@@ -1,8 +1,8 @@
 # Demo 6: Caldova Knowledge Hub — Vector Search Kept Fresh by an AI Pipeline
 
-![Knowledge Hub on Azure App Service: keyword vs vector vs hybrid search, an added article embedded by the on_change AI pipeline in seconds, and a real HorizonDB failover mid-run that pg_durable survives](knowledge-hub-demo.gif)
+![The five-step walkthrough on Azure App Service: search, add an article, an automatic search that answers while the AI pipeline is still running, search again with the new article at #1, and a real HorizonDB failover mid-run that pg_durable survives](knowledge-hub-demo.gif)
 
-*Recorded live against HorizonDB (failover section at 4× speed).*
+*The step-by-step walkthrough, recorded live against HorizonDB (step 5 at 4× speed).*
 
 A FastAPI app on Azure App Service. Operators search logistics procedures,
 carrier notes, and facility runbooks **by meaning**. When they add, edit, or
@@ -252,20 +252,20 @@ Service authentication (Microsoft Entra ID), which needs an app registration.
 
 ## Re-record the GIF
 
-`scripts/record-gif/` drives the deployed app with headless Chromium
-(Playwright) and builds `knowledge-hub-demo.gif` with Pillow:
+`scripts/record-gif/` drives the five-step walkthrough (`/`) on the deployed
+app with headless Chromium (Playwright) and builds `knowledge-hub-demo.gif`
+with Pillow:
 
 ```powershell
 cd demo6-vector-app/scripts/record-gif
 npm install; npx playwright install chromium
-node record.cjs            # add --skip-b to leave out the failover
+node record.cjs            # add --skip-failover to stop after step 4
 python make-gif.py ../../knowledge-hub-demo.gif
 ```
 
-Part B runs walkthrough step 5, which forces a **real failover** (one every
-5 minutes) and leaves the walkthrough's demo article behind; delete it
-afterwards (or select **Start over** in the walkthrough). Set
-`KNOWLEDGE_HUB_URL` to record a different deployment.
+Step 5 forces a **real failover** (one every 5 minutes). The script deletes
+the walkthrough's demo article when it finishes. Set `KNOWLEDGE_HUB_URL` to
+record a different deployment.
 
 ## Tests
 
