@@ -192,12 +192,15 @@ With approval (re-embeds changed rows; small billed embedding cost):
 Then confirm `Dry ice in air shipments` no longer appears in search (section 1).
 The in-app **Reset demo** button on `/app` does the same for articles.
 
-If preflight fails with `extension "vector" is not allow-listed`, the current
-primary has not applied the parameter group's `azure.extensions` (seen after a
-failover in this preview; the parameter group itself is correct). The
-extensions are already installed, so the app still works. Reset through the
-app instead, which only calls `knowledge_hub.reset_demo()` (restores the 12
-seed articles and the 16 handbook parts) and creates no extensions:
+If preflight fails with `extension "vector" is not allow-listed`, the primary
+is `caldova-logistics-replica-ha`, which does not apply the cluster's parameter
+group (empty `azure.extensions`, no `pgaadauth`; the parameter group itself is
+correct, and a restart or re-applying it with `az horizondb update` does not
+help). The extensions are already installed, so the app, pipeline, and
+failover still work. Either fail back to `replica-1` with approval
+(`03-force-failover.ps1`, about 15 s), or reset through the app instead, which
+only calls `knowledge_hub.reset_demo()` (restores the 12 seed articles and the
+16 handbook parts) and creates no extensions:
 
 ```powershell
 $u = 'https://caldova-knowledge-hub-d1229495.azurewebsites.net'
@@ -205,8 +208,8 @@ Invoke-WebRequest "$u/reset" -Method Post -UseBasicParsing -MaximumRedirection 0
 ```
 
 A `303` to `/app` means success; a redirect to `/?error=...` means it failed.
-Report the allow-list mismatch to the user; do not restart the cluster or fail
-over to fix it without approval.
+Report the allow-list mismatch to the user; do not restart the cluster, fail
+over, or recreate the replica to fix it without approval.
 
 ## 6. Local (only when explicitly asked)
 
