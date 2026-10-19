@@ -19,6 +19,11 @@ smoke test removed only its own uniquely identified test bookings.
 
 ## Map and live SQL walkthrough
 
+This 30-second walkthrough shows the live map, search filters, availability,
+typo lookup, and Debug sidebar. It uses read-only actions and creates no bookings.
+
+![Campsite map and live SQL Debug walkthrough](./campsites-debug-walkthrough.gif)
+
 The map is part of the normal campsite view. Leaflet is served locally from the
 installed package; OpenStreetMap supplies attributed street-map tiles. No map
 key or additional Azure resource is required. Tiles require internet access.
