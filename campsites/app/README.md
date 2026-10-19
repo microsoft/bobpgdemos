@@ -12,10 +12,38 @@ identity and verified TLS, without a stored database password. Search, typo look
 availability, and fictional bookings are enabled. Use demo aliases only, never
 personal information. Bookings persist and affect availability in both deployments.
 
-Final deployment checks passed: all 12 tests, including real Azure database
+Final deployment checks passed: all 14 tests, including real Azure database
 integration; live overlapping-booking rejection and checkout-day arrival; browser
 search, typo lookup, booking dialog, and narrow-screen layout. The live booking
 smoke test removed only its own uniquely identified test bookings.
+
+## Map and live SQL walkthrough
+
+The map is part of the normal campsite view. Leaflet is served locally from the
+installed package; OpenStreetMap supplies attributed street-map tiles. No map
+key or additional Azure resource is required. Tiles require internet access.
+If tiles cannot load, the app reports that explicitly instead of fabricating a
+basemap; database search, coordinates, and campsite markers remain available.
+
+Markers use `ST_X` / `ST_Y` from the stored PostGIS geography. Changing the search
+radius updates both the results and the radius ring around Seattle. The ring is
+a visual guide; `ST_DWithin` calculates the actual matches in PostgreSQL. Click
+a marker for campsite details and a link to its result card. Zoom, pan, and
+**Reset view** are available.
+
+The SQL sidebar is **hidden by default**. Click **Debug** at the bottom right to
+open it; close it with **Close**, **Hide debug**, or Escape. On desktop it sits
+on the right without covering the app; on narrow screens it appears above the
+search. It shows the last action's SQL, bound parameters, row count, outcome,
+and server database-call time. The last eight actions are held only in the page.
+Search and typo lookup update the sidebar. Bookings show the INSERT and any
+overlap rejection; the automatic availability refresh does not replace that
+booking entry. Booking aliases are redacted.
+
+The API's additive `execution` field uses the same query definitions in
+`src/queries.ts` as the PostgreSQL adapter, not a separately maintained sample
+query. This is a read-only inspector, not an arbitrary SQL execution endpoint.
+Timing includes connection acquisition and is not a database performance benchmark.
 
 ## Local development
 
@@ -85,7 +113,13 @@ eight connections, with connection, statement and lock timeouts.
 
 ## Security and operational boundaries
 
-Helmet CSP permits only local scripts/styles/connects, with no inline scripts or external UI assets. Dynamic strings use `textContent`; no HTML interpolation is used. CORS deliberately grants no cross-origin access. POST requires an exact `Origin` match and rejects cross-site Fetch Metadata; non-browser clients must explicitly send the configured origin too.
+Helmet CSP permits only local scripts/styles/connects, with no inline scripts.
+Images additionally allow the exact OpenStreetMap tile host and Leaflet's data-URI
+images. The browser sends only an origin referrer to cross-origin tile requests.
+Dynamic application strings use `textContent`; no user-controlled HTML
+interpolation is used. CORS deliberately grants no cross-origin access. POST
+requires an exact `Origin` match and rejects cross-site Fetch Metadata;
+non-browser clients must explicitly send the configured origin too.
 
 Set `PUBLIC_ORIGIN` to the canonical browser origin for reverse-proxy/HTTPS deployments.
 The Azure configuration derives it from each slot's actual hostname and pins it
@@ -142,6 +176,18 @@ resources, grants scoped database access, packages source without secrets, deplo
 through Entra-authenticated Kudu zipdeploy, and verifies staging before production.
 Without `-Provision`, it reuses the recorded ARM deployment and redeploys code.
 No database password, schema reset, seed operation, or firewall update is performed.
+
+For an existing deployment, validate staging before publishing to production:
+
+```powershell
+.\scripts\deploy.ps1 -StagingOnly
+# Check the staging map and Debug sidebar, then publish both slots:
+.\scripts\deploy.ps1
+```
+
+The deployment gate waits for the expected browser-script hash and new SQL
+execution details, rather than accepting a still-running previous release's
+readiness response. It also checks PostGIS coordinates and local map-library assets.
 
 `scripts/grant-database-access.mjs` binds role names to the exact managed identity
 object IDs and refuses to replace conflicting existing mappings. `PGUSER` and

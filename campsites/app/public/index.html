@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#113e35">
   <title>Find your next escape · Fictional Washington campsites</title>
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/vendor/leaflet.css">
+  <script src="/vendor/leaflet.js" defer></script>
   <script src="/app.js" defer></script>
 </head>
 <body>
@@ -21,6 +23,18 @@
     <div class="landscape" aria-hidden="true"><span>△</span><span>△</span><span>△</span></div>
     <div class="shell hero-footer">47.608° N / 122.335° W <span>Seattle is your starting point</span></div>
   </header>
+  <button id="debug-toggle" class="debug-toggle" type="button" aria-controls="debug-panel" aria-expanded="false">Debug</button>
+  <aside id="debug-panel" class="debug-panel" aria-labelledby="debug-title" hidden>
+    <div class="debug-heading"><div><p class="eyebrow">UNDER THE CANOPY</p><h2 id="debug-title">PostgreSQL, live.</h2></div><button id="debug-close" class="secondary" type="button" aria-label="Close debug sidebar">Close</button></div>
+    <p class="debug-intro">The SQL behind your last action, from the same query definitions the server executes. Parameters are bound separately, not interpolated.</p>
+    <label for="execution-history">Recent actions</label><select id="execution-history"><option value="">Waiting for a database action</option></select>
+    <p id="execution-summary" role="status" aria-live="polite">Search for campsites to see the query here.</p>
+    <p id="execution-request" class="debug-request"></p>
+    <h3>SQL statement</h3><pre tabindex="0" aria-label="Executed SQL"><code id="execution-sql">No query yet.</code></pre>
+    <h3>Bound parameters</h3><dl id="execution-parameters"></dl>
+    <p id="execution-explanation" class="debug-explanation"></p>
+    <p class="debug-footnote">Read-only inspector, not a SQL console. Demo aliases are redacted. Time includes the server's database call and connection acquisition, not just query execution.</p>
+  </aside>
   <main class="shell">
     <section class="intro" aria-label="PostgreSQL features">
       <div><p class="eyebrow">NATURE UP FRONT. POSTGRESQL UNDERNEATH.</p><h2>One database. Many ways to discover.</h2></div>
@@ -46,6 +60,13 @@
         <div class="section-heading"><div><p class="eyebrow">LESS SCROLLING. MORE STAR-GAZING.</p><h2 id="results-title">Somewhere good is out there.</h2></div><span class="badge pale">Fictional sites only</span></div>
         <p id="service-status" class="notice" role="status">Checking campsite service…</p>
         <p id="search-status" role="status" aria-live="polite">Search to discover your next escape.</p>
+        <section class="map-panel" aria-labelledby="map-title">
+          <div class="map-heading"><div><p class="eyebrow">POSTGIS, ON THE MAP</p><h3 id="map-title">Your escape has coordinates.</h3></div><button id="map-reset" class="secondary" type="button">Reset view</button></div>
+          <p id="map-caption" class="hint">Campsite markers use the locations stored in PostgreSQL. The ring shows the search radius from Seattle.</p>
+          <div id="campsite-map" role="region" aria-label="Interactive campsite map with Seattle and search radius"></div>
+          <p id="map-status" class="hint" role="status">Loading street map…</p>
+          <p class="map-legend"><span class="map-dot"></span>Available <span class="map-dot unavailable"></span>Unavailable <span class="map-dot seattle"></span>Seattle · Click a marker for campsite details.</p>
+        </section>
         <div id="campsites" class="cards"></div>
         <section class="typo-panel">
           <p class="eyebrow">A LITTLE TYPO SHOULDN'T STOP AN ADVENTURE</p><h3>Remember the place, not the spelling.</h3>

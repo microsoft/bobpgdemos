@@ -8,11 +8,13 @@ import {
   type BookingInput, type BookingReceipt, type Campsite, type SearchInput,
 } from "../src/domain.js";
 import { type CampsiteRepository, UnconfiguredRepository } from "../src/repository.js";
+import { bookingQuery, nameQuery, searchQuery } from "../src/queries.js";
 
 const origin = "http://localhost:3000";
 const site: Campsite = {
   campsite_id: 1, name: "Lake Sammamish Heron", description: "Fictional lakeside campsite.",
   nightly_price: 60, capacity: 4, km_from_seattle: 22,
+  longitude: -122.1, latitude: 47.62,
   amenities: { pet_friendly: true, kayak_rental: true, electric_hookup: false, fire_pit: true, setting: "lakeside" },
   available: true,
 };
@@ -82,6 +84,14 @@ test("search forwards filters, including availability dates, without exposing gu
   assert.equal(observed?.check_in, "2030-07-11");
   assert.equal(response.text.includes("PRIVATE_GUEST"), false);
   assert.equal(response.headers["cache-control"], "no-store");
+  assert.equal(response.body.campsites[0].longitude, site.longitude);
+  assert.equal(response.body.campsites[0].latitude, site.latitude);
+  assert.ok(observed);
+  const query = searchQuery(observed);
+  assert.equal(response.body.execution.sql, query.text);
+  assert.deepEqual(response.body.execution.parameters.map((parameter: { value: unknown }) => parameter.value), query.values);
+  assert.equal(response.body.execution.rows, 1);
+  assert.ok(response.body.execution.elapsed_ms >= 0);
   await client.get("/api/campsites?check_in=2030-02-30").expect(400);
   await client.get("/api/campsites?capacity=4&capacity=6").expect(400);
 });
@@ -97,6 +107,8 @@ test("typo search forwards the SQL demo spelling and whitelists output", async (
   const response = await client.get("/api/name-search").expect(200);
   assert.equal(observed, "Lake Samamish Heron");
   assert.equal(response.text.includes("PRIVATE_GUEST"), false);
+  assert.equal(response.body.execution.sql, nameQuery(observed).text);
+  assert.deepEqual(response.body.execution.parameters, [{ parameter: "$1", value: observed }]);
   await client.get("/api/name-search?name=").expect(400);
 });
 
@@ -112,7 +124,10 @@ test("valid booking preserves exclusive dates and returns a privacy-safe receipt
   assert.deepEqual(observed, booking);
   assert.deepEqual(response.body.booking, { reservation_id: "123", campsite_id: 1,
     check_in: "2030-07-11", check_out: "2030-07-13" });
-  assert.equal(response.text.includes("guest"), false);
+  assert.equal(response.text.includes(booking.guest_alias), false);
+  assert.equal(response.body.execution.sql, bookingQuery(booking).text);
+  assert.deepEqual(response.body.execution.parameters[1], { parameter: "$2", value: "[demo alias redacted]" });
+  assert.equal(response.body.execution.rows, 1);
   await client.get("/api/bookings").expect(404);
   await client.post("/api/bookings").set("Origin", origin).send({ ...booking, campsite_id: -1 }).expect(400);
 });
@@ -129,6 +144,13 @@ test("conflict, not-found, unavailable and unexpected failures have safe status 
       publicOrigin: origin, log: (event) => events.push(event) });
     const response = await request(server).post("/api/bookings").set("Origin", origin).send(booking).expect(code);
     assert.equal(/SECRET|PRIVATE_GUEST/.test(response.text + events.join()), false);
+    if (code === 409) {
+      assert.equal(response.body.execution.outcome, "overlap rejected (SQLSTATE 23P01)");
+      assert.equal(response.body.execution.rows, 0);
+      assert.equal(response.text.includes(booking.guest_alias), false);
+    } else {
+      assert.equal(response.body.execution, undefined);
+    }
   }
   const events: string[] = [];
   const failing = createApp({ repository: fixture({
@@ -175,8 +197,16 @@ test("static page has CSP, local assets, and no permissive CORS", async () => {
   const client = request(app());
   const response = await client.get("/").set("Origin", "https://evil.example").expect(200);
   assert.ok(response.headers["content-security-policy"]?.includes("script-src 'self'"));
+  assert.ok(response.headers["content-security-policy"]?.includes("img-src 'self' https://tile.openstreetmap.org data:"));
+  assert.equal(response.headers["referrer-policy"], "strict-origin-when-cross-origin");
   assert.equal(response.headers["access-control-allow-origin"], undefined);
   assert.ok(response.text.includes("Fictional"));
+  assert.ok(response.text.includes('id="debug-panel" class="debug-panel" aria-labelledby="debug-title" hidden'));
+  assert.ok(response.text.includes('id="debug-toggle"'));
+  assert.ok(response.text.includes('id="campsite-map"'));
   await client.get("/app.js").expect(200);
   await client.get("/styles.css").expect(200);
+  await client.get("/vendor/leaflet.js").expect(200).expect("Content-Type", /javascript/);
+  await client.get("/vendor/leaflet.css").expect(200).expect("Content-Type", /css/);
+  await client.get("/vendor/package.json").expect(404);
 });

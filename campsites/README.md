@@ -4,7 +4,9 @@ A PostgreSQL portability demo: 30 **fictional** campsites near real Washington
 locations, three seeded reservations, and standard open-source PostgreSQL features.
 The core local database walkthrough requires no app, AI model, large dataset,
 or Azure resource. An optional [web app](./app/README.md) adds browser search,
-availability, and fictional booking creation against the migrated Azure database.
+availability, interactive PostGIS maps, and fictional booking creation against
+the migrated Azure database. Its **Debug** button opens a live SQL sidebar,
+hidden by default, showing the queries and bound parameters behind each action.
 
 **Live app:** [Find your next escape](https://app-campsites-dev-a59e.azurewebsites.net).
 It runs on Azure App Service Premium P1v3 with always-on, health checks, and a
