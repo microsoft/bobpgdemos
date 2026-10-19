@@ -411,6 +411,18 @@ BEGIN
     DELETE FROM knowledge_hub.article article
     WHERE NOT EXISTS (SELECT 1 FROM knowledge_hub.seed_article seed WHERE seed.title = article.title);
 
+    -- Like delete_article: drop vectors no remaining article uses, so a
+    -- re-added demo article is embedded again instead of matching at once.
+    DELETE FROM knowledge_hub.chunk_embedding embedding
+    WHERE NOT EXISTS (
+              SELECT 1 FROM knowledge_hub.article_chunk_map map
+              WHERE map.chunk_hash = embedding.chunk_hash
+          )
+      AND NOT EXISTS (
+              SELECT 1 FROM knowledge_hub.article_chunk_previous previous
+              WHERE previous.chunk_hash = embedding.chunk_hash
+          );
+
     IF EXISTS (
         SELECT 1
         FROM knowledge_hub.article article
