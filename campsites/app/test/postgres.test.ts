@@ -4,6 +4,7 @@ import request from "supertest";
 import { createPool, PostgresRepository } from "../src/postgres.js";
 import { createApp } from "../src/app.js";
 import { searchSchema } from "../src/domain.js";
+import { searchQuery } from "../src/queries.js";
 
 test("database configuration fails explicitly and never disables remote TLS", async () => {
   assert.throws(() => createPool({}), /PGHOST/);
@@ -33,6 +34,15 @@ test("real PostgreSQL search, typo match, availability, bookings, and rollback",
     assert.equal(await repository.ready(), true);
     const core = await repository.search(searchSchema.parse({ available_only: "false" }));
     assert.equal(core.length, 6);
+    assert.deepEqual(core.map((site) => site.name), [
+      "Lake Washington Heron", "Lake Washington Pine", "Lake Sammamish Heron",
+      "Lake Sammamish Pine", "Lake Tapps Heron", "Lake Tapps Pine",
+    ]);
+    for (const site of core) {
+      assert.ok(Number.isFinite(site.longitude) && site.longitude >= -180 && site.longitude <= 180);
+      assert.ok(Number.isFinite(site.latitude) && site.latitude >= -90 && site.latitude <= 90);
+      assert.ok(site.km_from_seattle <= 45);
+    }
     const first = core[0];
     assert.ok(first);
     assert.equal(first.name, "Lake Washington Heron");
@@ -61,7 +71,14 @@ test("real PostgreSQL search, typo match, availability, bookings, and rollback",
       available_only: "false", check_in: body.check_in, check_out: body.check_out,
     }));
     assert.equal(during.find((site) => site.campsite_id === first.campsite_id)?.available, false);
-    const response = await app.get("/api/campsites").expect(200);
+    const response = await app.get("/api/campsites?available_only=false").expect(200);
+    assert.equal(response.body.execution.sql, searchQuery(searchSchema.parse({ available_only: "false" })).text);
+    assert.equal(response.body.campsites[0].longitude, first.longitude);
+    const stored = await client.query<{ longitude: number; latitude: number }>(
+      "SELECT ST_X(location::geometry) AS longitude, ST_Y(location::geometry) AS latitude FROM escape.campsite WHERE campsite_id=$1",
+      [first.campsite_id]);
+    assert.equal(first.longitude, stored.rows[0]?.longitude);
+    assert.equal(first.latitude, stored.rows[0]?.latitude);
     assert.equal(JSON.stringify(response.body).includes("Integration Demo"), false);
     await client.query("ROLLBACK");
     const residue = await client.query<{ count: string }>(

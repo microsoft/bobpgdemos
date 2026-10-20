@@ -70,6 +70,11 @@ a { color: var(--brand); }
 .walk-monitor li.is-warn { background: #fde7e9; border-left-color: #c50f1f; }
 .walk-failover { margin: 0 0 10px; }
 .walk-how { margin: 10px 0 0; padding: 10px 14px; color: #14212e; background: #fff4ce; border-left: 5px solid #c19c00; font-size: 15px; line-height: 1.45; }
+.walk-recovered { margin: 10px 0 0; padding: 12px 16px; color: #0b3d0b; background: #dff6dd; border-left: 6px solid #107c10; line-height: 1.4; animation: recovered-in 0.4s ease-out; }
+.walk-recovered strong { display: block; color: #0b5a0b; font-size: 24px; font-weight: 800; }
+.walk-recovered span { display: block; margin-top: 3px; font-size: 15px; font-weight: 600; }
+.walk-recovered span:empty { display: none; }
+@keyframes recovered-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .walk-timeline { margin-top: 10px; padding: 8px 14px; color: #dce8f5; background: #001d3d; border-left: 4px solid #32bedd; }
 .walk-timeline h3 { margin: 0 0 4px; color: #9fdcf5; font-size: 13px; }
 .walk-timeline ol { display: flex; flex-wrap: wrap; gap: 4px 8px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; line-height: 1.4; }

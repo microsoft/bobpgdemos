@@ -108,8 +108,18 @@ for *frozen CO2 on passenger flights*.
    **AI pipeline run** (its steps, then *paused at Embed* while the primary is
    down, then *same run picked back up on the new primary*), **Primary server**
    (an opaque id that changes when a new primary takes over) and **Searches**
-   (still answering). When the run finishes, the step searches *forklift speed
-   limit in Dock 4* and finds the new rule, marked **UPDATED**.
+   (still answering, from the read endpoint only). The moment a new primary answers, a green **✓ App back
+   online in about 1 s** banner shows the outage the app measured and how many
+   searches answered during the switch. The AI pipeline keeps working in the
+   background: when the run finishes, the step searches *forklift speed limit in
+   Dock 4* and finds the new rule, marked **UPDATED**.
+
+   Expect step 5 to take about 75 seconds live, against about 30 without a
+   failover. The app is back in about a second; the extra time is the pipeline.
+   The forced failover takes about 15 seconds to land after the request, and
+   Embed is one statement covering all 320 chunks, so the work in progress is
+   rolled back with the failover and Embed runs again on the new primary. Point
+   at the green banner while the pipeline finishes.
 
    Why it works: the AI pipeline runs on pg_durable. Every finished step is
    recorded in HorizonDB, so after the failover pg_durable continues the same
@@ -261,11 +271,15 @@ cd demo6-vector-app/scripts/record-gif
 npm install; npx playwright install chromium
 node record.cjs            # add --skip-failover to stop after step 4
 python make-gif.py ../../knowledge-hub-demo.gif
+# Full 16:9 slide version (1920x1080):
+node record.cjs --size=1920x1080
+python make-gif.py ../../knowledge-hub-demo-1080p.gif
 ```
 
-Step 5 forces a **real failover** (one every 5 minutes). The script deletes
-the walkthrough's demo article when it finishes. Set `KNOWLEDGE_HUB_URL` to
-record a different deployment.
+Step 5 forces a **real failover** (one every 5 minutes), and the script stops
+with an error if the failover did not land mid-run, so a bad take never
+replaces the GIF. The script deletes the walkthrough's demo article when it
+finishes. Set `KNOWLEDGE_HUB_URL` to record a different deployment.
 
 ## Tests
 
@@ -275,7 +289,7 @@ cd demo6-vector-app
 ```
 
 The tests cover routes, all three search modes, the `/api/search` JSON API
-(including `embedding_pending`), saving with a JSON response for scripts, the
+(including `embedding_pending`, which never delays or fails a search), saving with a JSON response for scripts, the
 step-by-step walkthrough page and article API,
 graceful database outages, one embedding call per query (cached), the
 failover and handbook endpoints, SQL rendering from the catalog, classification

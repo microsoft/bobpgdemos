@@ -59,7 +59,7 @@ export function createApp(options: AppOptions = {}) {
         scriptSrc: ["'self'"],
         styleSrc: ["'self'"],
         connectSrc: ["'self'"],
-        imgSrc: ["'self'", "https://tile.openstreetmap.org"],
+        imgSrc: ["'self'", "https://tile.openstreetmap.org", "data:"],
         fontSrc: ["'self'"],
         baseUri: ["'none'"],
         formAction: ["'self'"],

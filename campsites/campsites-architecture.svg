@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 2000 1125" role="img" aria-labelledby="title description">
+  <title id="title">From a PostgreSQL container to a live Azure campsite app</title>
+  <desc id="description">A PostgreSQL 18.6 Docker container is migrated once with pg_dump and pg_restore to Azure Database for PostgreSQL Flexible Server. Azure App Service connects to that database with managed identity, Entra tokens, scoped roles, and verified TLS. Browsers use HTTPS and load OpenStreetMap tiles. PostGIS, full-text search, JSONB, pg_trgm, ranges, and constraints power the app.</desc>
+  <defs>
+    <marker id="green-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#62d6ad"/>
+    </marker>
+    <marker id="blue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#72b8ff"/>
+    </marker>
+    <style>
+      text { font-family: 'Segoe UI', Arial, sans-serif; fill: #e7eef7; }
+      .mono { font-family: Consolas, 'Cascadia Mono', 'Courier New', monospace; }
+      .green { fill: #62d6ad; }
+      .blue { fill: #72b8ff; }
+      .muted { fill: #a5b4c6; }
+      .soft { fill: #c8d3e0; }
+      .section { font-size: 21px; font-weight: 700; }
+      .card-title { font-size: 26px; font-weight: 650; }
+      .feature-title { font-size: 26px; font-weight: 650; }
+      .feature-subtitle { font-size: 19px; font-weight: 700; fill: #62d6ad; }
+      .feature-line { font-size: 18px; fill: #aebdcd; }
+      .card { fill: #142134; stroke: #2e425b; stroke-width: 1.5; }
+      .soft-card { fill: #13281f; stroke: #2b5947; stroke-width: 1.5; }
+      .badge { fill: #1c6a55; }
+      .azure-badge { fill: #1e6fb8; }
+      .divider { stroke: #34475f; stroke-width: 1.5; }
+    </style>
+  </defs>
+
+  <rect width="2000" height="1125" fill="#0b1220"/>
+
+  <text x="56" y="49" font-size="18" font-weight="700" class="green">CAMPSITES / POSTGRESQL PORTABILITY</text>
+  <text x="56" y="116" font-size="48" font-weight="700">From a PostgreSQL container to a live Azure campsite app</text>
+  <text x="58" y="158" font-size="24" class="muted">A completed database migration, followed by the live request path. Same PostgreSQL schema and features.</text>
+
+  <circle cx="73" cy="245" r="17" class="badge"/>
+  <text x="73" y="253" text-anchor="middle" font-size="20" font-weight="700">1</text>
+  <text x="104" y="253" class="section green">CONTAINER SOURCE</text>
+  <circle cx="423" cy="245" r="17" class="badge"/>
+  <text x="423" y="253" text-anchor="middle" font-size="20" font-weight="700">2</text>
+  <text x="454" y="253" class="section green">MIGRATE ONCE</text>
+
+  <rect x="57" y="319" width="284" height="311" rx="14" class="card"/>
+  <g fill="none" stroke="#62d6ad" stroke-width="2.5">
+    <rect x="80" y="364" width="18" height="14" rx="2"/>
+    <rect x="102" y="364" width="18" height="14" rx="2"/>
+    <rect x="124" y="364" width="18" height="14" rx="2"/>
+    <rect x="102" y="345" width="18" height="14" rx="2"/>
+    <path d="M78 386 H148 Q145 405 120 405 H101 Q82 405 78 386 Z"/>
+  </g>
+  <text x="80" y="447" font-size="24" font-weight="700">PostgreSQL container</text>
+  <text x="80" y="483" font-size="21" class="muted">Docker on the laptop</text>
+  <text x="80" y="521" font-size="23" font-weight="700" class="green">PostgreSQL 18.6</text>
+  <text x="80" y="560" font-size="20">30 fictional campsites</text>
+  <text x="80" y="592" font-size="18" class="muted">Schema + seed bookings</text>
+
+  <text x="370" y="455" text-anchor="middle" font-size="16" class="green">dump</text>
+  <path d="M353 472 H392" stroke="#62d6ad" stroke-width="3" marker-end="url(#green-arrow)"/>
+
+  <rect x="407" y="319" width="326" height="311" rx="14" class="card"/>
+  <text x="431" y="366" font-size="27" class="mono">pg_dump</text>
+  <text x="431" y="413" font-size="21" class="muted">Custom-format archive</text>
+  <path d="M431 437 H709" class="divider"/>
+  <text x="431" y="477" font-size="27" class="mono">pg_restore</text>
+  <text x="431" y="523" font-size="20">Single-transaction restore</text>
+  <text x="431" y="561" font-size="19" class="muted">Entra authentication</text>
+  <text x="431" y="594" font-size="19" class="muted">Certificate-verified TLS</text>
+
+  <text x="766" y="455" text-anchor="middle" font-size="16" class="green">restore</text>
+  <path d="M744 472 H814" stroke="#62d6ad" stroke-width="3" marker-end="url(#green-arrow)"/>
+
+  <rect x="57" y="656" width="676" height="82" rx="10" class="soft-card"/>
+  <text x="78" y="687" font-size="18" font-weight="700" class="green">MIGRATION VERIFIED</text>
+  <text x="78" y="719" font-size="19">Schema + data fingerprints matched. Container source preserved.</text>
+
+  <rect x="803" y="191" width="842" height="547" rx="18" fill="#10233a" stroke="#2c5a85" stroke-width="1.5"/>
+  <text x="828" y="230" font-size="20" font-weight="700" class="blue">AZURE  /  CENTRAL US</text>
+  <text x="828" y="260" font-size="17" class="muted">Resource group: campsites-demo-rg</text>
+
+  <circle cx="844" cy="296" r="17" class="azure-badge"/>
+  <text x="844" y="304" text-anchor="middle" font-size="20" font-weight="700">3</text>
+  <text x="875" y="304" class="section blue">AZURE DATABASE</text>
+  <circle cx="1306" cy="296" r="17" class="azure-badge"/>
+  <text x="1306" y="304" text-anchor="middle" font-size="20" font-weight="700">4</text>
+  <text x="1337" y="304" class="section blue">APPLICATION</text>
+
+  <rect x="828" y="332" width="373" height="298" rx="14" class="card"/>
+  <g fill="#1d3854" stroke="#72b8ff" stroke-width="2.5">
+    <ellipse cx="880" cy="361" rx="28" ry="10"/>
+    <path d="M852 361 V398 C852 411 908 411 908 398 V361" fill="none"/>
+    <path d="M852 380 C852 393 908 393 908 380" fill="none"/>
+  </g>
+  <text x="929" y="377" font-size="25" font-weight="700">Azure Database</text>
+  <text x="929" y="414" font-size="25" font-weight="700">for PostgreSQL</text>
+  <text x="852" y="461" font-size="21">Flexible Server / PostgreSQL 18</text>
+  <text x="852" y="499" font-size="20" font-weight="700" class="blue">bobward-campsites-pg18</text>
+  <text x="852" y="540" font-size="20">campsites / escape schema</text>
+  <text x="852" y="580" font-size="20" class="muted">Campsites + reservations</text>
+  <text x="852" y="612" font-size="16" class="muted">General Purpose / D16s_v3</text>
+
+  <text x="1232" y="421" text-anchor="middle" font-size="16" font-weight="700" class="blue">SQL</text>
+  <text x="1247" y="449" text-anchor="middle" font-size="14" class="blue">+ rows</text>
+  <path d="M1218 469 H1274" stroke="#72b8ff" stroke-width="3" marker-start="url(#blue-arrow)" marker-end="url(#blue-arrow)"/>
+
+  <rect x="1290" y="332" width="331" height="298" rx="14" class="card"/>
+  <rect x="1313" y="353" width="52" height="48" rx="8" fill="#1d3854" stroke="#3f6b91"/>
+  <text x="1339" y="384" text-anchor="middle" font-size="22" class="mono blue">&lt;/&gt;</text>
+  <text x="1384" y="384" font-size="25" font-weight="700">App Service</text>
+  <text x="1313" y="451" font-size="25" font-weight="700" class="blue">Node.js + TypeScript</text>
+  <text x="1313" y="490" font-size="20">Express API + pg driver</text>
+  <text x="1313" y="529" font-size="19">Premium P1v3 / always-on</text>
+  <text x="1313" y="567" font-size="19">Search / availability / booking</text>
+  <text x="1313" y="607" font-size="18" class="muted">Production + staging slot</text>
+
+  <text x="833" y="674" font-size="20" class="blue">Managed identity + Entra tokens / scoped database role / verified TLS</text>
+  <text x="833" y="711" font-size="17" class="muted">Staging shares the demo database. No stored database password.</text>
+
+  <circle cx="1717" cy="296" r="17" class="badge"/>
+  <text x="1717" y="304" text-anchor="middle" font-size="20" font-weight="700">5</text>
+  <text x="1748" y="304" class="section green">VISITOR</text>
+  <text x="1673" y="443" text-anchor="middle" font-size="13" font-weight="700">HTTPS</text>
+  <path d="M1656 469 H1689" stroke="#62d6ad" stroke-width="3" marker-start="url(#green-arrow)" marker-end="url(#green-arrow)"/>
+
+  <rect x="1701" y="332" width="246" height="298" rx="14" class="card"/>
+  <rect x="1724" y="354" width="59" height="44" rx="6" fill="#18283c" stroke="#40546e"/>
+  <path d="M1724 366 H1783" stroke="#40546e"/>
+  <text x="1797" y="383" font-size="23" font-weight="700">Browser</text>
+  <text x="1723" y="451" font-size="24" font-weight="700" class="green">Public web app</text>
+  <text x="1723" y="490" font-size="17">Filters + campsite cards</text>
+  <text x="1723" y="525" font-size="17">Interactive Leaflet map</text>
+  <text x="1723" y="561" font-size="17">Fictional bookings</text>
+  <text x="1723" y="597" font-size="17">Optional SQL Debug</text>
+
+  <path d="M1824 651 V636" stroke="#62d6ad" stroke-width="2.5" marker-end="url(#green-arrow)"/>
+  <rect x="1701" y="654" width="246" height="84" rx="10" class="soft-card"/>
+  <text x="1718" y="690" font-size="20" font-weight="700" class="green">OpenStreetMap</text>
+  <text x="1718" y="719" font-size="16" class="muted">Street tiles to browser</text>
+
+  <text x="56" y="801" font-size="21" font-weight="700" class="green">POSTGRESQL FEATURES THAT POWER THE EXPERIENCE</text>
+
+  <g>
+    <rect x="57" y="825" width="361" height="215" rx="10" class="card"/>
+    <path d="M57 828 H418" stroke="#62d6ad" stroke-width="7"/>
+    <text x="75" y="873" class="feature-title">PostGIS</text>
+    <text x="75" y="910" class="feature-subtitle">Find nearby campsites</text>
+    <text x="75" y="949" class="feature-line">ST_DWithin + ST_Distance</text>
+    <text x="75" y="980" class="feature-line">Stored coordinates to map</text>
+    <text x="75" y="1011" class="feature-line">GiST spatial index</text>
+  </g>
+  <g>
+    <rect x="439" y="825" width="362" height="215" rx="10" class="card"/>
+    <path d="M439 828 H801" stroke="#62d6ad" stroke-width="7"/>
+    <text x="457" y="873" class="feature-title">Full-text search</text>
+    <text x="457" y="910" class="feature-subtitle">Search names + descriptions</text>
+    <text x="457" y="949" class="feature-line">tsvector + tsquery</text>
+    <text x="457" y="980" class="feature-line">websearch_to_tsquery</text>
+    <text x="457" y="1011" class="feature-line">GIN search index</text>
+  </g>
+  <g>
+    <rect x="821" y="825" width="362" height="215" rx="10" class="card"/>
+    <path d="M821 828 H1183" stroke="#62d6ad" stroke-width="7"/>
+    <text x="839" y="873" class="feature-title">JSONB</text>
+    <text x="839" y="910" class="feature-subtitle">Filter amenities</text>
+    <text x="839" y="949" class="feature-line">Pet-friendly + kayak rental</text>
+    <text x="839" y="980" class="feature-line">JSON containment (@&gt;)</text>
+    <text x="839" y="1011" class="feature-line">GIN amenities index</text>
+  </g>
+  <g>
+    <rect x="1203" y="825" width="362" height="215" rx="10" class="card"/>
+    <path d="M1203 828 H1565" stroke="#62d6ad" stroke-width="7"/>
+    <text x="1221" y="873" class="feature-title">pg_trgm</text>
+    <text x="1221" y="910" class="feature-subtitle">Recover from typos</text>
+    <text x="1221" y="949" class="feature-line">Similarity ranking + %</text>
+    <text x="1221" y="980" class="feature-line">Samamish -&gt; Sammamish</text>
+    <text x="1221" y="1011" class="feature-line">GIN trigram index</text>
+  </g>
+  <g>
+    <rect x="1585" y="825" width="362" height="215" rx="10" class="card"/>
+    <path d="M1585 828 H1947" stroke="#62d6ad" stroke-width="7"/>
+    <text x="1603" y="873" class="feature-title">Ranges + constraints</text>
+    <text x="1603" y="910" class="feature-subtitle">Keep bookings consistent</text>
+    <text x="1603" y="949" class="feature-line">daterange + overlaps (&amp;&amp;)</text>
+    <text x="1603" y="980" class="feature-line">GiST exclusion constraint</text>
+    <text x="1603" y="1011" class="feature-line">Checkout-day arrivals OK</text>
+  </g>
+
+  <text x="56" y="1093" font-size="18" class="muted">Migration: completed dump/restore, not a continuous replication pipeline.</text>
+  <text x="1104" y="1093" font-size="18" class="muted">Anonymous demo bookings only / one app instance / not a production HA design</text>
+</svg>

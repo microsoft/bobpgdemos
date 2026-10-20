@@ -255,21 +255,35 @@ class KnowledgeHubRepository:
         return bool(row["running"])
 
     def embedding_pending(self) -> bool:
-        """True while any current article chunk still waits for its vector."""
-        with self._database.reader() as connection:
-            row = connection.execute(
-                """
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM knowledge_hub.article_chunk_map map
-                    WHERE NOT EXISTS (
-                        SELECT 1 FROM knowledge_hub.chunk_embedding embedding
-                        WHERE embedding.chunk_hash = map.chunk_hash
-                          AND embedding.embedding IS NOT NULL
-                    )
-                ) AS pending
-                """
-            ).fetchone()
+        """True while any current article chunk still waits for its vector.
+
+        Read on the primary: a just-saved article can take a moment to reach
+        the read replica, which would otherwise report nothing pending. During
+        a failover the primary is briefly unreachable, so fall back to the
+        replica quickly instead of holding up the search that asked.
+        """
+        try:
+            with self._database.primary(timeout=2) as connection:
+                return self._embedding_pending(connection)
+        except Exception:
+            with self._database.reader() as connection:
+                return self._embedding_pending(connection)
+
+    @staticmethod
+    def _embedding_pending(connection: Any) -> bool:
+        row = connection.execute(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM knowledge_hub.article_chunk_map map
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM knowledge_hub.chunk_embedding embedding
+                    WHERE embedding.chunk_hash = map.chunk_hash
+                      AND embedding.embedding IS NOT NULL
+                )
+            ) AS pending
+            """
+        ).fetchone()
         return bool(row["pending"])
 
     def freshness(self) -> list[dict[str, Any]]:

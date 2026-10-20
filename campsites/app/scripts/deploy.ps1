@@ -3,7 +3,8 @@ param(
     [string]$Subscription = '0efc44aa-c965-420f-aac4-fff305dbcc97',
     [string]$ResourceGroup = 'campsites-demo-rg',
     [string]$AppName = 'app-campsites-dev-a59e',
-    [switch]$Provision
+    [switch]$Provision,
+    [switch]$StagingOnly
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -62,7 +63,9 @@ try {
     }
 } finally { $zip.Dispose() }
 
-foreach ($slot in @('staging', 'production')) {
+$slots = if ($StagingOnly) { @('staging') } else { @('staging', 'production') }
+$expectedScriptHash = (Get-FileHash "$root\public\app.js" -Algorithm SHA256).Hash
+foreach ($slot in $slots) {
     $slotArgs = @()
     $hostName = $outputs.productionHost.value
     $resourceId = $outputs.productionId.value
@@ -102,22 +105,39 @@ foreach ($slot in @('staging', 'production')) {
     for ($attempt = 0; $attempt -lt 18; $attempt++) {
         $health = Invoke-WebRequest -Uri "https://$hostName/readyz" -SkipHttpErrorCheck -TimeoutSec 30
         if ($health.StatusCode -eq 200 -and ($health.Content | ConvertFrom-Json).status -eq 'ready') {
-            $ready = $true
-            break
+            $scriptResponse = Invoke-WebRequest -Uri "https://$hostName/app.js" -SkipHttpErrorCheck -TimeoutSec 30
+            $scriptHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+                [Text.Encoding]::UTF8.GetBytes([string]$scriptResponse.Content)))
+            $searchResponse = Invoke-WebRequest -Uri "https://$hostName/api/campsites?available_only=false" -SkipHttpErrorCheck -TimeoutSec 30
+            if ($scriptResponse.StatusCode -eq 200 -and $scriptHash -eq $expectedScriptHash -and
+                $searchResponse.StatusCode -eq 200 -and
+                ($searchResponse.Content | ConvertFrom-Json).execution.sql -match 'ST_X') {
+                $ready = $true
+                break
+            }
         }
-        Write-Host "$slot readiness HTTP $($health.StatusCode); waiting for startup."
+        Write-Host "$slot readiness HTTP $($health.StatusCode); waiting for the expected app release."
         Start-Sleep -Seconds 10
     }
     if (-not $ready) { throw "$slot did not become database-ready." }
     $search = Invoke-RestMethod -Uri "https://$hostName/api/campsites?available_only=false" -TimeoutSec 30
     if (@($search.campsites).Count -ne 6) { throw "$slot did not return six combined search results." }
+    if ($null -eq $search.campsites[0].longitude -or $null -eq $search.campsites[0].latitude) {
+        throw "$slot did not return PostGIS map coordinates."
+    }
+    if ($search.execution.operation -ne 'search' -or @($search.execution.parameters).Count -ne 9) {
+        throw "$slot did not return the SQL execution details."
+    }
+    foreach ($asset in @('leaflet.js', 'leaflet.css')) {
+        $null = Invoke-WebRequest -Uri "https://$hostName/vendor/$asset" -TimeoutSec 30
+    }
     $names = Invoke-RestMethod -Uri "https://$hostName/api/name-search?name=Lake%20Samamish%20Heron" -TimeoutSec 30
     if ($names.matches[0].name -ne 'Lake Sammamish Heron') { throw "$slot typo search failed." }
     $policy = Invoke-Azure @('rest', '--method', 'get', '--url',
         "$resourceId/basicPublishingCredentialsPolicies/scm?api-version=2025-03-01",
         '--query', 'properties.allow', '-o', 'tsv')
     if (($policy -join '').Trim() -ne 'false') { throw "SCM basic authentication is not disabled for $slot." }
-    Write-Host "PASS: $slot readiness, six matches, typo match, and disabled SCM basic authentication."
+    Write-Host "PASS: $slot expected release, readiness, six matches, PostGIS coordinates, SQL inspector, map assets, typo match, and disabled SCM basic authentication."
 }
-Write-Host "Live app: https://$($outputs.productionHost.value)"
+if (-not $StagingOnly) { Write-Host "Live app: https://$($outputs.productionHost.value)" }
 Write-Host "Staging: https://$($outputs.stagingHost.value)"
