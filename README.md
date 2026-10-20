@@ -7,6 +7,8 @@ PostgreSQL and Azure HorizonDB**. Explore familiar PostgreSQL features, take a
 local database to Azure, and see how search, AI pipelines, and governed agents
 come together in working applications.
 
+![Azure Database for PostgreSQL (generally available), managed open-source PostgreSQL on Azure-managed compute and storage; and Azure HorizonDB (public preview), cloud-native PostgreSQL with cloud-native compute, log, and storage.](assets/azure-postgresql-and-horizondb.png)
+
 > From finding your next campsite to responding to a logistics incident:
 > learn by running the code, exploring the data, and seeing the results.
 
