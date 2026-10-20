@@ -11,6 +11,7 @@
   <script src="/app.js" defer></script>
 </head>
 <body>
+  <div id="app-content">
   <a class="skip-link" href="#explore">Skip to campsite search</a>
   <header class="hero">
     <nav class="shell"><a class="brand" href="/">◈ EVERGREEN / ESCAPES</a><span class="badge">A fictional PostgreSQL demo</span></nav>
@@ -19,14 +20,31 @@
       <h1>Find your<br><em>next escape.</em></h1>
       <p>Quiet lakes. Tall cedars. Room to breathe.<br>Explore fictional campsites with the power of PostgreSQL.</p>
       <a class="button light" href="#explore">Explore the campsites ↓</a>
+      <button id="guide-start" class="secondary" type="button" aria-controls="demo-guide" aria-expanded="false">Start guided demo</button>
     </div>
     <div class="landscape" aria-hidden="true"><span>△</span><span>△</span><span>△</span></div>
     <div class="shell hero-footer">47.608° N / 122.335° W <span>Seattle is your starting point</span></div>
   </header>
+  <section id="demo-guide" class="demo-guide" aria-labelledby="guide-title" hidden>
+    <p id="guide-progress" class="eyebrow"></p>
+    <h2 id="guide-title" tabindex="-1"></h2>
+    <p id="guide-instruction"></p>
+    <p class="hint">Click the highlighted control, then choose Next. Next and Back only change the instructions; they never submit a search or booking.</p>
+    <div class="inline guide-navigation">
+      <button id="guide-back" class="secondary" type="button">Back</button>
+      <button id="guide-next" type="button">Next</button>
+      <button id="guide-exit" class="secondary" type="button">Exit guide</button>
+    </div>
+  </section>
   <button id="debug-toggle" class="debug-toggle" type="button" aria-controls="debug-panel" aria-expanded="false">Debug</button>
   <aside id="debug-panel" class="debug-panel" aria-labelledby="debug-title" hidden>
     <div class="debug-heading"><div><p class="eyebrow">UNDER THE CANOPY</p><h2 id="debug-title">PostgreSQL, live.</h2></div><button id="debug-close" class="secondary" type="button" aria-label="Close debug sidebar">Close</button></div>
     <p class="debug-intro">The SQL behind your last action, from the same query definitions the server executes. Parameters are bound separately, not interpolated.</p>
+    <section class="debug-activity" aria-labelledby="activity-title">
+      <h3 id="activity-title">Live action</h3>
+      <p id="activity-instruction">Run a search, book a stay, or look up a name. This panel updates automatically.</p>
+      <p id="activity-result" role="status" aria-live="polite">No live action yet.</p>
+    </section>
     <label for="execution-history">Recent actions</label><select id="execution-history"><option value="">Waiting for a database action</option></select>
     <p id="execution-summary" role="status" aria-live="polite">Search for campsites to see the query here.</p>
     <p id="execution-request" class="debug-request"></p>
@@ -52,7 +70,7 @@
           <label class="check"><input name="kayak_rental" type="checkbox" checked> Kayak rental</label>
           <label class="check"><input name="available_only" type="checkbox" checked> Available for these dates only</label>
           <p class="hint">Checkout-day arrivals are welcome. Stays: 1–30 nights.</p>
-          <button type="submit">Find my escape ↗</button>
+          <button id="search-submit" type="submit">Find my escape ↗</button>
         </form>
         <details><summary>How this search works</summary><p>PostGIS measures real geographic distance from Seattle. Full-text search matches words in names and descriptions. JSONB filters amenities. Date ranges exclude overlapping stays.</p></details>
       </aside>
@@ -83,12 +101,14 @@
     </section>
   </main>
   <footer class="shell footer"><strong>◈ EVERGREEN / ESCAPES</strong><p>All campsites and bookings are fictional. Not a real travel or reservation service. Use a demo alias, never a personal name.</p></footer>
+  </div>
   <dialog id="booking-dialog" aria-labelledby="booking-title">
     <form id="booking-form">
       <p class="eyebrow">JUST A DEMO. STILL A GREAT ESCAPE.</p><h2 id="booking-title">Book a fictional stay</h2>
       <p id="booking-site"></p><p id="booking-dates"></p>
       <label for="guest-alias">Demo alias — not your personal name</label><input id="guest-alias" maxlength="60" placeholder="Cedar Explorer" autocomplete="off" required>
       <p class="hint">Letters, numbers, spaces, underscores and hyphens only. No real booking, payment or guest directory.</p>
+      <label class="check"><input id="booking-confirm" type="checkbox" required> I confirm: save this fictional booking to the shared database. It will persist and affect availability.</label>
       <p id="booking-status" role="status" aria-live="polite"></p>
       <div class="inline"><button id="booking-submit" type="submit">Create demo booking</button><button id="booking-close" type="button" class="secondary">Close</button></div>
     </form>

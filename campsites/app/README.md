@@ -2,6 +2,12 @@
 
 A responsive, fictional Washington campsite demo showcasing PostgreSQL geography, full-text search, JSONB, typo tolerance and date-range availability.
 
+## Architecture
+
+See the [dark-mode architecture diagram](../campsites-architecture.svg) for the
+container-to-Azure database migration, live app request flow, and PostgreSQL
+features. A [1920 x 1080 PNG](../campsites-architecture.png) is ready for slides.
+
 ## Live demo
 
 - [Open the campsite app](https://app-campsites-dev-a59e.azurewebsites.net)
@@ -55,11 +61,23 @@ a visual guide; `ST_DWithin` calculates the actual matches in PostgreSQL. Click
 a marker for campsite details and a link to its result card. Zoom, pan, and
 **Reset view** are available.
 
-The SQL sidebar is **hidden by default**. Click **Debug** at the bottom right to
-open it; close it with **Close**, **Hide debug**, or Escape. On desktop it sits
+Editing the radius shows a reminder that it has not been applied yet. Click
+**Find my escape** to run the search: a highlighted completion message reports
+the applied radius, previous radius when changed, match count, and dates.
+The SQL sidebar opens automatically for this explicit search, including the
+actual radius bound to `$6`. The initial page load and booking availability
+refresh do not automatically open Debug.
+
+The SQL sidebar is **hidden on initial load**. Click **Debug** at the bottom right to
+open it manually, or click **Find my escape** to open it automatically;
+close it with **Close** or Escape. On desktop it sits
 on the right without covering the app; on narrow screens it appears above the
 search. It shows the last action's SQL, bound parameters, row count, outcome,
 and server database-call time. The last eight actions are held only in the page.
+Every live action opens and updates Debug automatically. Its **Live action**
+section distinguishes instructions, pending operations, completed results, and
+errors. Filter edits and map controls explicitly report that no SQL ran;
+the SQL shown is still the last completed database operation.
 Search and typo lookup update the sidebar. Bookings show the INSERT and any
 overlap rejection; the automatic availability refresh does not replace that
 booking entry. Booking aliases are redacted.
@@ -70,6 +88,44 @@ query. This is a read-only inspector, not an arbitrary SQL execution endpoint.
 Timing includes connection acquisition and is not a database performance benchmark.
 
 ## Local development
+
+### Click-through guided demo
+
+Click **Start guided demo** beside **Explore the campsites** to follow a
+8-step, presenter-paced walkthrough. Each step states **CLICK/SET/ENTER** and
+**EXPECT**, highlights
+the next control and explains what to click: map, Debug, filters, radius,
+search SQL, booking, availability, typo lookup, and action history.
+**Next** and **Back** navigate instructions only; they never submit requests.
+**Exit guide** (or **Finish**) returns to the normal app.
+
+The guide has a compact dock with navigation beside the instructions on desktop,
+below the scrollable app rather than covering
+the map or SQL. While Debug is open, its floating toggle is hidden; use the
+sidebar's **Close** button or Escape instead.
+
+The guide moves inside the booking dialog while it is open so its navigation
+remains usable above a separately scrollable booking form. Enter a demo alias and explicitly tick the shared-database
+confirmation before clicking **Create demo booking**. This confirmation is
+required for all bookings, with or without the guide. A successful booking
+persists in the shared database and affects availability; exiting or restarting
+the guide does not remove it. You can skip the booking steps without saving.
+Searches use current data, so counts and available campsites can differ from
+the recorded GIF. If there are no available campsites, adjust dates or filters.
+
+Booking requests stop waiting after 20 seconds. If the response times out or
+the connection fails, the dialog reports an **unknown outcome** and prevents
+resubmission from that form: the reservation may already have saved. Availability
+refreshes, but it is not proof of which reservation was saved. Confirm the outcome
+before attempting the same booking again; requests are never retried automatically.
+
+After success, the booking dialog closes automatically and Debug displays the
+receipt and actual INSERT, with the alias redacted. The guide advances to
+**Read the booking result**. Availability refreshes without replacing the INSERT.
+An error leaves the dialog open with its error message; an unknown outcome
+must be checked before resubmitting. Guide navigation never submits a booking.
+
+### Run locally
 
 Requires Node.js 24+, npm, and Azure CLI signed in as an authorized database user:
 
