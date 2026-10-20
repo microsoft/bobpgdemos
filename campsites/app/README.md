@@ -2,12 +2,6 @@
 
 A responsive, fictional Washington campsite demo showcasing PostgreSQL geography, full-text search, JSONB, typo tolerance and date-range availability.
 
-## Architecture
-
-See the [dark-mode architecture diagram](../campsites-architecture.svg) for the
-container-to-Azure database migration, live app request flow, and PostgreSQL
-features. A [1920 x 1080 PNG](../campsites-architecture.png) is ready for slides.
-
 ## Live demo
 
 - [Open the campsite app](https://app-campsites-dev-a59e.azurewebsites.net)
@@ -25,11 +19,12 @@ smoke test removed only its own uniquely identified test bookings.
 
 ## Architecture slide
 
-The static [4K architecture diagram](./campsites-architecture.png) and
+The dark-mode [4K architecture diagram](./campsites-architecture.png) and
 [1920 x 1080 version](./campsites-architecture-1080p.png) fit a 16:9 PowerPoint
-slide. They show the completed local PostgreSQL dump/restore migration,
+slide. They show the completed PostgreSQL container dump/restore migration,
 Azure PostgreSQL, App Service, browser and map connections, and the PostgreSQL
-features used by the app. The diagram is separate from the walkthrough GIF.
+features used by the app. Edit the [SVG source](../campsites-architecture.svg)
+and re-render both PNGs. The diagram is separate from the walkthrough GIF.
 
 ## Map and live SQL walkthrough
 

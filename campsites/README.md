@@ -18,12 +18,13 @@ persist in the shared demo database; use aliases, not personal information.
 
 The dark-mode, 16:9 diagram shows the one-time container-to-Azure migration,
 the deployed browser/API/database flow, and the PostgreSQL features used by
-the app. Production and staging share the migrated database; the local
+the app. Production and staging share the migrated database; the PostgreSQL
 container is not a live replication source.
 
 ![Campsite migration and application architecture](./campsites-architecture.svg)
 
-Download the [slide-ready PNG](./app/campsites-architecture.png) or edit the
+Download the [4K PNG](./app/campsites-architecture.png) or
+[1920 x 1080 PNG](./app/campsites-architecture-1080p.png), or edit the
 [SVG source](./campsites-architecture.svg). The engine version shown is the
 verified migration checkpoint, not a live version check.
 
