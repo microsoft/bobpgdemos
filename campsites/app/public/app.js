@@ -323,7 +323,7 @@ dialog.addEventListener("close", () => {
     if (guideStep !== null && ["choose", "book"].includes(guideSteps[guideStep].id)) {
       guideStep = guideSteps.findIndex((step) => step.id === "receipt");
     }
-    if (guideStep === null) debugPanel.scrollIntoView({ block: "start", behavior: "instant" });
+    if (guideStep === null) get("booking-receipts").scrollIntoView({ block: "start", behavior: "instant" });
   }
   if (guideStep !== null) renderGuide();
 });
@@ -335,6 +335,7 @@ get("booking-form").addEventListener("submit", async (event) => {
     return;
   }
   const booking = { ...selected, guest_alias: get("guest-alias").value };
+  const campsiteName = get("booking-site").textContent;
   const previousSearch = activeSearch ? new URLSearchParams(activeSearch) : null;
   const button = get("booking-submit");
   button.disabled = true;
@@ -348,6 +349,11 @@ get("booking-form").addEventListener("submit", async (event) => {
       signal: AbortSignal.timeout(20_000),
     });
     get("booking-status").textContent = `Demo booking ${data.booking.reservation_id} created. This is not a real reservation.`;
+    const receipt = node("li");
+    receipt.append(node("strong", `Booking saved: ${campsiteName}`),
+      node("p", `Booking #${data.booking.reservation_id} · ${data.booking.check_in} to ${data.booking.check_out} · Checkout exclusive`));
+    get("saved-bookings").prepend(receipt);
+    get("booking-receipts").hidden = false;
     bookingSaved = true;
     showActivity("Booking saved", "The INSERT succeeded. The alias is redacted in the SQL parameters below.",
       `Receipt ${data.booking.reservation_id}: campsite ${booking.campsite_id}, ${booking.check_in} to ${booking.check_out}. Availability is refreshing automatically; its SELECT does not replace this INSERT.`);
@@ -400,8 +406,8 @@ const guideSteps = [
     instruction: "CLICK Book demo stay on an available campsite. EXPECT the booking form with that site's dates. Opening it does not save anything. If none are available, change dates or filters and search." },
   { id: "book", title: "Confirm and save once", target: "#booking-form",
     instruction: "ENTER a demo alias, TICK the shared-database confirmation, then CLICK Create demo booking ONCE. EXPECT the dialog to close on success and Debug to show the receipt and INSERT. This booking persists." },
-  { id: "receipt", title: "Read the booking result", target: "#activity-result", debug: true,
-    instruction: "READ the receipt and INSERT in Debug, then the refreshed map/cards. EXPECT the booked site to disappear with Available only checked. No second click or booking is needed; Next does not write data." },
+  { id: "receipt", title: "Read the booking result", target: "#booking-receipts", debug: true,
+    instruction: "READ Your demo bookings this visit for the saved site, dates, and receipt number; Debug shows the INSERT. EXPECT the booked site to disappear from Available only results, not from your receipt list. No second booking is needed." },
   { id: "typo", title: "Run the typo lookup", target: "#name-form",
     instruction: "ENTER Lake Samamish Heron, then CLICK Find name. EXPECT Lake Sammamish Heron and similarity scores, with pg_trgm SQL automatically replacing the INSERT in Debug." },
   { id: "history", title: "Compare the recorded SQL", target: "#execution-history", debug: true,
@@ -439,6 +445,10 @@ function renderGuide() {
     get("guide-instruction").textContent = "Debug is already open. Inspect the live SQL sidebar, then choose Next. Use its Close button whenever you want to hide it.";
   }
   if (guideTarget?.closest("dialog") && !dialog.open) guideTarget = null;
+  if (step.id === "receipt" && get("booking-receipts").hidden) {
+    get("guide-instruction").textContent = "No confirmed booking was saved in this page visit. Go Back to book, or choose Next to skip. No receipt or successful INSERT is implied.";
+    guideTarget = get("search-status");
+  }
   if (!guideTarget) {
     get("guide-instruction").textContent += " Open an available campsite's booking form to continue this part, or use Next to skip without writing data.";
     guideTarget = document.querySelector(".book-stay:not(:disabled)") ?? searchForm;

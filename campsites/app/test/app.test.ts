@@ -207,7 +207,7 @@ test("static page has CSP, local assets, and no permissive CORS", async () => {
   assert.ok(response.text.includes('id="app-content"'));
   assert.ok(response.text.includes('id="demo-guide" class="demo-guide" aria-labelledby="guide-title" hidden'));
   for (const id of ["guide-start", "guide-back", "guide-next", "guide-exit", "guide-instruction", "search-submit",
-    "activity-title", "activity-instruction", "activity-result"]) {
+    "activity-title", "activity-instruction", "activity-result", "booking-receipts", "saved-bookings"]) {
     assert.ok(response.text.includes(`id="${id}"`), id);
   }
   assert.match(response.text, /id="booking-confirm" type="checkbox" required/);

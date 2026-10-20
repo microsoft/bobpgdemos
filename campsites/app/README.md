@@ -122,6 +122,11 @@ before attempting the same booking again; requests are never retried automatical
 After success, the booking dialog closes automatically and Debug displays the
 receipt and actual INSERT, with the alias redacted. The guide advances to
 **Read the booking result**. Availability refreshes without replacing the INSERT.
+The main results area also shows **Your demo bookings this visit**, with each
+confirmed campsite name, stay dates, and booking number, independently of Debug
+and availability filtering. Receipts accumulate only in the current page;
+reloading clears this list but does not delete the persisted database bookings.
+It is not an authenticated booking-history or reservation-management feature.
 An error leaves the dialog open with its error message; an unknown outcome
 must be checked before resubmitting. Guide navigation never submits a booking.
 
