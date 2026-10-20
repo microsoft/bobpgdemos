@@ -330,11 +330,34 @@
         box.hidden = !text;
     }
 
+    // The app polls once a second, so outages are measured to about a second.
+    const outageText = (ms) => (ms < 1500 ? 'about 1 s' : `${Math.round(ms / 1000)} s`);
+
+    // Shown the moment a new primary answers, while the pipeline is still finishing.
+    function showRecovered(state) {
+        const { searches, newPrimary, first, downFor, run } = state;
+        const head = document.createElement('strong');
+        head.textContent = downFor != null ? `✓ App back online in ${outageText(downFor)}` : '✓ App stayed online';
+        const detail = document.createElement('span');
+        detail.textContent = `New primary ${newPrimary.server_id} took over from ${first.server_id}. Searches kept answering: ${searches.duringOutage} during the switch, ${searches.failed} failed.`;
+        const note = document.createElement('span');
+        note.textContent = run?.status === 'running'
+            ? 'The AI pipeline is finishing its batch in the background on the new primary. The app does not wait for it.'
+            : '';
+        part(5, 'recovered').replaceChildren(head, detail, note);
+        part(5, 'recovered').hidden = false;
+        if (!state.recoveryShown) {
+            state.recoveryShown = true;
+            failoverStatus('');
+        }
+    }
+
     function resetWatchRows() {
         setRow('pipeline', 'Waiting for the update…');
         setRow('primary', 'Checking…');
         setRow('search', 'Starting…');
         part(5, 'failover-how').hidden = true;
+        part(5, 'recovered').hidden = true;
         part(5, 'action').hidden = true;
         part(5, 'action').disabled = false;
         part(5, 'output').hidden = true;
@@ -370,7 +393,9 @@
     }
 
     async function watchSearches(state) {
-        const url = `/api/search?${new URLSearchParams({ q: QUERY, mode: 'vector' })}`;
+        // Step 5 only needs the answer, not the embedding status, so these
+        // searches touch only the read endpoint.
+        const url = `/api/search?${new URLSearchParams({ q: QUERY, mode: 'vector', pending: '0' })}`;
         while (state.active) {
             const started = performance.now();
             try {
@@ -492,8 +517,9 @@
         }
 
         if (state.newPrimary) {
-            const outage = state.downFor != null ? ` after ${Math.round(state.downFor / 1000)} s` : '';
-            setRow('primary', `New primary took over${outage}: ${state.newPrimary.server_id} (was ${state.first.server_id})`, 'ok');
+            const outage = state.downFor != null ? `Back online after ${outageText(state.downFor)}` : 'Switched with no outage seen';
+            setRow('primary', `${outage}: new primary ${state.newPrimary.server_id} (was ${state.first.server_id})`, 'ok');
+            showRecovered(state);
         } else if (state.downSince) {
             setRow('primary', `Down for ${Math.round((Date.now() - state.downSince) / 1000)} s… failover in progress`, 'down');
         } else if (state.first) {
@@ -541,14 +567,15 @@
             output(5, meta(`Search "${RULE_QUERY}" did not answer. Try it in the full app.`));
         }
         const searchSummary = state.searches.failed ? `${state.searches.failed} searches failed during the switch` : 'searches never stopped';
+        const back = state.downFor != null ? `The app was back online in ${outageText(state.downFor)}` : 'The app stayed online';
         const { run } = state;
         let message;
         if (run.status === 'completed' && state.pausedAt) {
-            message = `Failover survived: the primary went down mid-Embed, ${searchSummary}, and pg_durable finished the same run #${state.runId} on the new primary. The update is searchable.`;
+            message = `Failover survived: ${back.charAt(0).toLowerCase()}${back.slice(1)} and ${searchSummary}. In the background, pg_durable finished the same run #${state.runId} on the new primary, and the update is searchable.`;
         } else if (run.status === 'completed') {
-            message = `Failover done and ${searchSummary}. Run #${state.runId} finished before the failover hit this time; select Start over to try again.`;
+            message = `${back} and ${searchSummary}. Run #${state.runId} finished before the failover hit this time; select Start over to try again.`;
         } else {
-            message = `Failover done and ${searchSummary}, but run #${state.runId} ${run.status}. This preview does not retry a failed run on its own; select Start over to run step 5 again.`;
+            message = `${back} and ${searchSummary}, but run #${state.runId} ${run.status}. This preview does not retry a failed run on its own; select Start over to run step 5 again.`;
         }
         callout(5, message);
         complete(5);

@@ -161,7 +161,7 @@ async function walkthrough() {
         let text = '5 · Handbook updated: the on_change trigger starts one pipeline run · 4× speed';
         if (/requested|goes down/i.test(await statusText())) text = '5 · Run is in Embed: failover requested, the primary goes down for real · 4× speed';
         if (/^Down for/i.test(primary)) text = '5 · Primary down: searches keep answering; the run is paused, its finished steps saved in HorizonDB · 4× speed';
-        if (/New primary/i.test(primary)) text = '5 · New primary took over: pg_durable picks the SAME run back up; finished steps are not redone · 4× speed';
+        if (/New primary/i.test(primary)) text = '5 · App back online in seconds: searches never stopped. The pipeline finishes its batch in the background · 4× speed';
         if (text !== phase) { phase = text; await caption(text); log(text); }
         const started = Date.now();
         await capture(250);
@@ -174,7 +174,7 @@ async function walkthrough() {
     // The failover must land while the run is still in Embed; otherwise the take does not show the story.
     if (!/Failover survived/i.test(outcome)) throw new Error('Step 5 did not show a survived mid-run failover; wait for the cooldown and record again.');
     await reveal('[data-step="5"] [data-callout]');
-    await caption('5 · Failover survived: same run finished on the new primary, and the updated rule is searchable');
+    await caption('5 · App back online in seconds, and pg_durable finished the same run on the new primary');
     await capture(6000);
 }
 

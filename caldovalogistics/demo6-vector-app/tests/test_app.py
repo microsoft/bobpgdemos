@@ -18,6 +18,8 @@ class FakeRepository:
         self.searches: list[tuple[str, str]] = []
         self.fail = False
         self.pending = False
+        self.pending_fails = False
+        self.pending_checks = 0
         self.running = False
         self.revisions = 0
         self.articles = [
@@ -81,6 +83,9 @@ class FakeRepository:
         return [{"article_id": 2, "expected_chunks": 1, "embedded_chunks": 1, "searchable": True}]
 
     def embedding_pending(self) -> bool:
+        if self.pending_fails:
+            raise RuntimeError("primary failing over")
+        self.pending_checks += 1
         return self.pending
 
     def vector_index_definition(self) -> str | None:
@@ -206,6 +211,26 @@ def test_search_api_returns_json_results(client: TestClient, repository: FakeRep
     assert repository.searches == [("truck fridge", "hybrid"), ("x", "vector")]
 
 
+def test_search_answers_even_when_embedding_status_is_unavailable(client: TestClient, repository: FakeRepository) -> None:
+    # During a failover the primary is briefly unreachable. The search itself
+    # runs on the read endpoint, so it must still answer.
+    repository.pending_fails = True
+
+    response = client.get("/api/search", params={"q": "dry ice"})
+
+    assert response.status_code == 200
+    assert response.json()["embedding_pending"] is None
+    assert response.json()["results"][0]["title"] == "Reefer unit failure response"
+
+
+def test_search_can_skip_the_embedding_status(client: TestClient, repository: FakeRepository) -> None:
+    # Step 5 polls with pending=0 so its searches touch only the read endpoint.
+    payload = client.get("/api/search", params={"q": "dry ice", "pending": "0"}).json()
+
+    assert payload["embedding_pending"] is None and repository.pending_checks == 0
+    assert payload["results"]
+
+
 def test_search_api_empty_query_and_bad_mode(client: TestClient, repository: FakeRepository) -> None:
     empty = client.get("/api/search", params={"q": "  "}).json()
     fallback = client.get("/api/search", params={"q": "battery", "mode": "drop table"}).json()
@@ -309,6 +334,8 @@ def test_walkthrough_page_shows_five_steps_one_at_a_time(client: TestClient) -> 
     assert "Survive a failover mid-run" in body and "Update the handbook and fail over" in body
     for row in ("pipeline", "primary", "search"):
         assert f'data-monitor="{row}"' in body
+    # The app's quick recovery gets its own banner, shown once a new primary answers.
+    assert 'class="walk-recovered" data-recovered role="status" hidden' in body
     assert "data-sim-banner" not in body and "Simulation" not in body and 'data-action="simulate"' not in body
     assert "walk-flow" not in body and "data-replay hidden" not in body and "data-show-pipeline" not in body
     assert "New row" not in body and "Updated row" not in body

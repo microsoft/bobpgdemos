@@ -123,3 +123,20 @@ def test_embedding_pending_is_read_on_the_primary() -> None:
 
     assert repository.embedding_pending() is True
     assert [pool for pool, _ in database.pools] == ["primary"]
+    # It must not wait the pool's 30 s default while the primary fails over.
+    assert database.timeouts == [2]
+
+
+def test_embedding_pending_falls_back_to_the_reader_during_a_failover() -> None:
+    class FailingPrimary(FakeDatabase):
+        @contextmanager
+        def primary(self, timeout: float | None = None) -> Iterator[FakeConnection]:
+            self.timeouts.append(timeout)
+            raise RuntimeError("couldn't get a connection")
+            yield  # pragma: no cover
+
+    database = FailingPrimary()
+    repository = KnowledgeHubRepository(database)  # type: ignore[arg-type]
+
+    assert repository.embedding_pending() is True
+    assert [pool for pool, _ in database.pools] == ["reader"]

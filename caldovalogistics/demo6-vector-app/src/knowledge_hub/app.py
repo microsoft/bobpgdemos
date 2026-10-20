@@ -303,7 +303,7 @@ def create_app(repository: Repository | None = None, failover: Failover | None =
         return JSONResponse(result, status_code=202)
 
     @app.get("/api/search")
-    def api_search(request: Request, q: str = "", mode: str = "vector") -> JSONResponse:
+    def api_search(request: Request, q: str = "", mode: str = "vector", pending: str = "1") -> JSONResponse:
         current: Repository = request.app.state.repository
         mode = mode if mode in SEARCH_MODES else "vector"
         query = q.strip()[:300]
@@ -311,18 +311,24 @@ def create_app(repository: Repository | None = None, failover: Failover | None =
         try:
             results = current.search(query, mode) if query else []
             elapsed_ms = round((time.perf_counter() - started) * 1000)
-            # Read right after the search, so each answer says whether the
-            # pipeline was still embedding anything at that moment.
-            pending = current.embedding_pending()
         except Exception:
             logger.exception("Search failed")
             return JSONResponse({"error": "HorizonDB is unavailable."}, status_code=503)
+        # Read right after the search, so each answer says whether the pipeline
+        # was still embedding anything at that moment. It is extra information:
+        # it must never delay or fail the search (step 5 skips it with pending=0).
+        embedding_pending = None
+        if pending != "0":
+            try:
+                embedding_pending = current.embedding_pending()
+            except Exception:
+                logger.warning("Embedding status unavailable", exc_info=True)
         return JSONResponse(
             {
                 "query": query,
                 "mode": mode,
                 "elapsed_ms": elapsed_ms,
-                "embedding_pending": pending,
+                "embedding_pending": embedding_pending,
                 "results": [asdict(result) for result in results],
             },
             headers={"Cache-Control": "no-store"},
