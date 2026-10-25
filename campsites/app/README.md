@@ -17,6 +17,28 @@ integration; live overlapping-booking rejection and checkout-day arrival; browse
 search, typo lookup, booking dialog, and narrow-screen layout. The live booking
 smoke test removed only its own uniquely identified test bookings.
 
+## Offline video backup
+
+MP4 recordings are local-only presentation backups and are ignored by Git.
+The links below work when the files are present locally; the videos are not
+included in a clone or available as GitHub downloads.
+
+[Local Bob-voice MP4](../../assets/campsites-backup-bob-voice.mp4)
+(about 2 minutes 40 seconds, 1920 x 1080). This version uses an authorized,
+AI-generated version of Bob Ward's voice, synthesized locally with Chatterbox Nano,
+not an original spoken recording.
+It includes embedded audio, optional English subtitles, and chapters. Scene holds
+are retimed to the narration. The original stock-voice version remains available
+below.
+
+[Local stock-voice MP4](../../assets/campsites-backup-narrated.mp4) (about
+3 minutes 10 seconds, 1920 x 1080). It covers map and filter searches, live SQL
+inspection, a fictional booking, the availability update, and typo-tolerant lookup.
+The video uses the existing widescreen walkthrough recording with local synthetic
+English narration and extended scene holds, not a new live session. The original
+recording's demo booking was removed afterward. Audio and optional English
+subtitles are embedded; playback needs no app, database, or network connection.
+
 ## Architecture slide
 
 The dark-mode [4K architecture diagram](./campsites-architecture.png) and

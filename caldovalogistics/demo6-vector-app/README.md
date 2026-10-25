@@ -4,6 +4,31 @@
 
 *The step-by-step walkthrough, recorded live against HorizonDB (step 5 at 4× speed).*
 
+## Offline video backup
+
+MP4 recordings are local-only presentation backups and are ignored by Git.
+The links below work when the files are present locally; the videos are not
+included in a clone or available as GitHub downloads.
+
+[Local Bob-voice MP4](../../assets/demo6-vector-app-backup-bob-voice.mp4)
+(about 3 minutes 1 second, 1920 x 1080). This version uses an authorized,
+AI-generated version of Bob Ward's voice, synthesized locally with Chatterbox Nano,
+not an original spoken recording.
+It includes embedded audio, optional English subtitles, and chapters. Scene holds
+are retimed to the narration. The original stock-voice version remains available
+below.
+
+[Local stock-voice MP4](../../assets/demo6-vector-app-backup-narrated.mp4)
+(about 3 minutes 32 seconds, 1920 x 1080). It covers all five steps, including the
+new article becoming searchable and a successful real mid-pipeline failover.
+The video uses the existing 1080p walkthrough recording with local synthetic
+English narration and extended scene holds, not a new live session. The failover
+footage retains its labeled 4x acceleration; the narration explains the recorded
+outcome rather than promising a recovery time. Audio and optional English subtitles
+are embedded; playback needs no app, database, or network connection.
+
+## Overview
+
 A FastAPI app on Azure App Service. Operators search logistics procedures,
 carrier notes, and facility runbooks **by meaning**. When they add, edit, or
 delete an article, HorizonDB keeps the vectors current without any app code:
