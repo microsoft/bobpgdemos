@@ -431,3 +431,9 @@ FodyWeavers.xsd
 
 # Local presentation videos
 *.[mM][pP]4
+
+# Keep Caldova Bank local until public release
+/caldovabank/
+/.github/skills/caldova-bank-demo/
+/.github/skills/caldova-bank-non-app-benchmark/
+/caldova-bank-*.png
