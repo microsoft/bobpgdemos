@@ -183,7 +183,7 @@ The app never creates, migrates, resets, or seeds schema.
 
 Search query parameters: `text` (up to 200 characters), `pet_friendly`, `kayak_rental`, `available_only` (literal `true`/`false`), `capacity` (integer 1–20), `radius_km` (1–200), `longitude` (−180–180), `latitude` (−90–90), `check_in`, `check_out`. Unknown/repeated parameters are rejected. False amenity flags mean “do not require this amenity,” not “exclude it.”
 
-Defaults mirror `../sql/03-demo.sql`: `lake kayaking`, pet-friendly and kayak rental required, capacity ≥4, radius 45 km, Seattle (−122.335, 47.608), July 11–13, 2030, available only. Name lookup defaults to intentionally misspelled `Lake Samamish Heron`; the canonical seeded name is `Lake Sammamish Heron`.
+Defaults mirror `../sql/03-demo.sql`: `lake kayaking`, pet-friendly and kayak rental required, capacity ≥4, radius 45 km, Seattle (−122.335, 47.608), July 11–13, 2030, available only. The browser's name-lookup field starts empty, with no example placeholder, so the presenter can enter the misspelling during the demo. The API still defaults to intentionally misspelled `Lake Samamish Heron` when `name` is omitted; the canonical seeded name is `Lake Sammamish Heron`.
 
 Dates must be actual calendar dates in `YYYY-MM-DD`, years 0001–9999. Checkout must follow check-in, at most 30 nights. Stays are **[check-in, checkout)**, permitting checkout-day arrivals. Historical demo dates are intentionally not forbidden.
 Booking IDs must be positive PostgreSQL integer campsite IDs. Aliases are trimmed, 1–60 characters, letters/numbers/spaces/underscores/hyphens only. The UI explicitly requests an alias, not a personal name; software cannot prove an alias is not a real name.

@@ -211,6 +211,10 @@ test("static page has CSP, local assets, and no permissive CORS", async () => {
     assert.ok(response.text.includes(`id="${id}"`), id);
   }
   assert.match(response.text, /id="booking-confirm" type="checkbox" required/);
+  const nameInput = response.text.match(/<input\b[^>]*\bid="name-query"[^>]*>/)?.[0];
+  assert.ok(nameInput);
+  assert.doesNotMatch(nameInput, /\b(?:value|placeholder)\s*=/);
+  assert.match(nameInput, /\brequired\b/);
   assert.ok(response.text.includes("It will persist and affect availability."));
   await client.get("/app.js").expect(200);
   await client.get("/styles.css").expect(200);
